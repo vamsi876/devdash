@@ -33,7 +33,10 @@ class JwtTool(DevTool):
 
         parts = token.split(".")
         if len(parts) != 3:
-            return f"Error: Invalid JWT format. Expected 3 parts (header.payload.signature), got {len(parts)}."
+            return (
+                "Error: Invalid JWT format. "
+                f"Expected 3 parts (header.payload.signature), got {len(parts)}."
+            )
 
         try:
             header = jwt.get_unverified_header(token)
@@ -41,7 +44,18 @@ class JwtTool(DevTool):
             return f"Error: Could not decode JWT header: {e}"
 
         try:
-            payload = jwt.decode(token, options={"verify_signature": False}, algorithms=["HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "ES256", "ES384", "ES512"])
+            algorithms = [
+                "HS256",
+                "HS384",
+                "HS512",
+                "RS256",
+                "RS384",
+                "RS512",
+                "ES256",
+                "ES384",
+                "ES512",
+            ]
+            payload = jwt.decode(token, options={"verify_signature": False}, algorithms=algorithms)
         except jwt.exceptions.DecodeError as e:
             return f"Error: Could not decode JWT payload: {e}"
 
@@ -68,7 +82,8 @@ class JwtTool(DevTool):
             expiry = datetime.fromtimestamp(exp, tz=timezone.utc)
             is_expired = now > expiry
             lines.append(f"Expires At: {expiry.isoformat()}")
-            lines.append(f"Status:     {'*** EXPIRED ***' if is_expired else 'Valid (not expired)'}")
+            status = "*** EXPIRED ***" if is_expired else "Valid (not expired)"
+            lines.append(f"Status:     {status}")
         else:
             lines.append("Expires At: No expiration set")
 

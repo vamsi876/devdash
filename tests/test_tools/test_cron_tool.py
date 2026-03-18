@@ -93,9 +93,7 @@ class TestNextRunTimes:
         first_run = lines[0].strip()
         # Parse "2025-03-18 00:00:00 UTC"
         date_str = first_run.replace(" UTC", "")
-        run_dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S").replace(
-            tzinfo=timezone.utc
-        )
+        run_dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
         assert run_dt > now
 
 

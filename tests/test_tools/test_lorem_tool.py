@@ -97,18 +97,24 @@ class TestLatinContent:
         result = tool.process("5 words")
         result_lower = result.lower()
         latin_words = [
-            "lorem", "ipsum", "dolor", "sit", "amet", "consectetur",
-            "adipiscing", "elit", "sed", "eiusmod", "tempor",
+            "lorem",
+            "ipsum",
+            "dolor",
+            "sit",
+            "amet",
+            "consectetur",
+            "adipiscing",
+            "elit",
+            "sed",
+            "eiusmod",
+            "tempor",
         ]
         assert any(w in result_lower for w in latin_words)
 
     def test_paragraphs_contain_latin(self, tool: LoremTool) -> None:
         result = tool.process("1 paragraph")
         result_lower = result.lower()
-        assert any(
-            w in result_lower
-            for w in ["lorem", "dolor", "enim", "duis", "excepteur"]
-        )
+        assert any(w in result_lower for w in ["lorem", "dolor", "enim", "duis", "excepteur"])
 
 
 class TestEdgeCases:

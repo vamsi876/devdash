@@ -50,7 +50,11 @@ class CronTool(DevTool):
 
         # Validate cron expression
         if not croniter.is_valid(text):
-            return f"Error: Invalid cron expression '{text}'.\n\nFormat: minute hour day-of-month month day-of-week\nExample: 0 9 * * 1-5 (9 AM on weekdays)"
+            return (
+                f"Error: Invalid cron expression '{text}'.\n\n"
+                "Format: minute hour day-of-month month day-of-week\n"
+                "Example: 0 9 * * 1-5 (9 AM on weekdays)"
+            )
 
         # Human-readable description
         desc = self._describe(text)
@@ -112,8 +116,14 @@ class CronTool(DevTool):
 
     def _dow_name(self, dow: str) -> str:
         names = {
-            "0": "Sunday", "1": "Monday", "2": "Tuesday", "3": "Wednesday",
-            "4": "Thursday", "5": "Friday", "6": "Saturday", "7": "Sunday",
+            "0": "Sunday",
+            "1": "Monday",
+            "2": "Tuesday",
+            "3": "Wednesday",
+            "4": "Thursday",
+            "5": "Friday",
+            "6": "Saturday",
+            "7": "Sunday",
         }
         if dow in names:
             return names[dow]

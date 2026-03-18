@@ -2,7 +2,6 @@
 
 import re
 from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
 
 from devdash.tools.base import DevTool
 
@@ -132,7 +131,11 @@ class TimestampTool(DevTool):
 
         ts = int(dt.timestamp())
         ts_ms = ts * 1000
-        return f"Unix (seconds):      {ts}\nUnix (milliseconds): {ts_ms}\nISO 8601:            {dt.isoformat()}"
+        return (
+            f"Unix (seconds):      {ts}\n"
+            f"Unix (milliseconds): {ts_ms}\n"
+            f"ISO 8601:            {dt.isoformat()}"
+        )
 
 
 def register() -> DevTool:

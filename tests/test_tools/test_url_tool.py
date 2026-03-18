@@ -93,16 +93,12 @@ class TestUrlParse:
         assert "Query Parameters:" not in result
 
     def test_parse_url_with_multiple_query_values(self, tool: UrlTool) -> None:
-        result = tool.process(
-            "https://example.com?tag=a&tag=b", mode="parse"
-        )
+        result = tool.process("https://example.com?tag=a&tag=b", mode="parse")
         assert "tag = a" in result
         assert "tag = b" in result
 
     def test_parse_all_components_present(self, tool: UrlTool) -> None:
-        result = tool.process(
-            "https://example.com:443/api/v1?q=test#top", mode="parse"
-        )
+        result = tool.process("https://example.com:443/api/v1?q=test#top", mode="parse")
         for label in ["Scheme:", "Host:", "Port:", "Path:", "Query:", "Fragment:"]:
             assert label in result
 

@@ -43,9 +43,7 @@ class TestSimplePatternMatching:
 
 class TestGroupCaptures:
     def test_numbered_groups(self, tool: RegexTool) -> None:
-        result = tool.process(
-            "", pattern=r"(\d{3})-(\d{4})", test_string="call 555-1234 now"
-        )
+        result = tool.process("", pattern=r"(\d{3})-(\d{4})", test_string="call 555-1234 now")
         assert "Group 1: '555'" in result
         assert "Group 2: '1234'" in result
 
@@ -130,13 +128,9 @@ class TestEmptyInput:
 
 class TestPresets:
     def test_email_preset(self, tool: RegexTool) -> None:
-        result = tool.process(
-            "", pattern="email", test_string="contact user@example.com today"
-        )
+        result = tool.process("", pattern="email", test_string="contact user@example.com today")
         assert "user@example.com" in result
 
     def test_ipv4_preset(self, tool: RegexTool) -> None:
-        result = tool.process(
-            "", pattern="ipv4", test_string="server at 192.168.1.1 is down"
-        )
+        result = tool.process("", pattern="ipv4", test_string="server at 192.168.1.1 is down")
         assert "192.168.1.1" in result

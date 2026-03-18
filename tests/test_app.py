@@ -55,11 +55,11 @@ class TestMainFunction:
         """main() should instantiate DevDashApp and call run()."""
         from devdash.app import main
 
-        with patch("devdash.app.DevDashApp") as MockApp:
+        with patch("devdash.app.DevDashApp") as mock_app_cls:
             mock_instance = MagicMock()
-            MockApp.return_value = mock_instance
+            mock_app_cls.return_value = mock_instance
             main()
-            MockApp.assert_called_once()
+            mock_app_cls.assert_called_once()
             mock_instance.run.assert_called_once()
 
 

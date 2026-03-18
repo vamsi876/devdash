@@ -102,12 +102,8 @@ class TestEntropyCalculation:
     def test_entropy_increases_with_length(self, tool: PasswordTool) -> None:
         result_short = tool.process("8")
         result_long = tool.process("32")
-        entropy_short = float(
-            result_short.split("entropy: ")[1].split(" bits")[0]
-        )
-        entropy_long = float(
-            result_long.split("entropy: ")[1].split(" bits")[0]
-        )
+        entropy_short = float(result_short.split("entropy: ")[1].split(" bits")[0])
+        entropy_long = float(result_long.split("entropy: ")[1].split(" bits")[0])
         assert entropy_long > entropy_short
 
 

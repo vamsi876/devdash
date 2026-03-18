@@ -2,10 +2,7 @@
 
 from unittest.mock import patch
 
-import pytest
-
 from devdash.clipboard import ContentType, detect_type, read, write
-
 
 # ---------------------------------------------------------------------------
 # detect_type: happy-path for every ContentType
@@ -23,7 +20,7 @@ class TestDetectType:
         assert detect_type('{"key": "value"}') is ContentType.JSON
 
     def test_json_array_detected(self) -> None:
-        assert detect_type('[1, 2, 3]') is ContentType.JSON
+        assert detect_type("[1, 2, 3]") is ContentType.JSON
 
     def test_uuid_detected(self) -> None:
         assert detect_type("550e8400-e29b-41d4-a716-446655440000") is ContentType.UUID
@@ -97,7 +94,8 @@ class TestDetectTypePriority:
 
     def test_timestamp_out_of_range_is_plain_text(self) -> None:
         """A 10-digit number beyond year 2100 should not be a timestamp."""
-        assert detect_type("9999999999") is ContentType.UNIX_TIMESTAMP or detect_type("9999999999") is ContentType.PLAIN_TEXT
+        result = detect_type("9999999999")
+        assert result in (ContentType.UNIX_TIMESTAMP, ContentType.PLAIN_TEXT)
         # 9999999999 = Nov 2286, which is > 4102444800 (year 2100), so should be PLAIN_TEXT
         # Let's test a definitely out-of-range one
         assert detect_type("0000000001") is ContentType.UNIX_TIMESTAMP  # epoch +1s is valid

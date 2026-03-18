@@ -20,17 +20,25 @@ def sample_jwt() -> str:
     import json
     import time
 
-    header = base64.urlsafe_b64encode(
-        json.dumps({"alg": "HS256", "typ": "JWT"}).encode()
-    ).rstrip(b"=").decode()
-    payload = base64.urlsafe_b64encode(
-        json.dumps({
-            "sub": "1234567890",
-            "name": "Test User",
-            "iat": int(time.time()) - 3600,
-            "exp": int(time.time()) + 3600,
-        }).encode()
-    ).rstrip(b"=").decode()
+    header = (
+        base64.urlsafe_b64encode(json.dumps({"alg": "HS256", "typ": "JWT"}).encode())
+        .rstrip(b"=")
+        .decode()
+    )
+    payload = (
+        base64.urlsafe_b64encode(
+            json.dumps(
+                {
+                    "sub": "1234567890",
+                    "name": "Test User",
+                    "iat": int(time.time()) - 3600,
+                    "exp": int(time.time()) + 3600,
+                }
+            ).encode()
+        )
+        .rstrip(b"=")
+        .decode()
+    )
     signature = base64.urlsafe_b64encode(b"fakesignature").rstrip(b"=").decode()
     return f"{header}.{payload}.{signature}"
 
@@ -41,15 +49,23 @@ def sample_jwt_expired() -> str:
     import json
     import time
 
-    header = base64.urlsafe_b64encode(
-        json.dumps({"alg": "HS256", "typ": "JWT"}).encode()
-    ).rstrip(b"=").decode()
-    payload = base64.urlsafe_b64encode(
-        json.dumps({
-            "sub": "1234567890",
-            "exp": int(time.time()) - 3600,
-        }).encode()
-    ).rstrip(b"=").decode()
+    header = (
+        base64.urlsafe_b64encode(json.dumps({"alg": "HS256", "typ": "JWT"}).encode())
+        .rstrip(b"=")
+        .decode()
+    )
+    payload = (
+        base64.urlsafe_b64encode(
+            json.dumps(
+                {
+                    "sub": "1234567890",
+                    "exp": int(time.time()) - 3600,
+                }
+            ).encode()
+        )
+        .rstrip(b"=")
+        .decode()
+    )
     signature = base64.urlsafe_b64encode(b"fakesignature").rstrip(b"=").decode()
     return f"{header}.{payload}.{signature}"
 

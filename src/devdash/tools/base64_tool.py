@@ -50,7 +50,8 @@ class Base64Tool(DevTool):
             if _is_base64(input_text.strip()):
                 decoded = self._decode(input_text, url_safe)
                 if not decoded.startswith("Error:"):
-                    return f"[Auto-detected Base64 → Decoded]\n{decoded}\n\nBytes: {len(input_text.strip().encode())}"
+                    byte_len = len(input_text.strip().encode())
+                    return f"[Auto-detected Base64 → Decoded]\n{decoded}\n\nBytes: {byte_len}"
             return self._encode(input_text, url_safe)
 
     def _encode(self, text: str, url_safe: bool) -> str:
@@ -68,7 +69,8 @@ class Base64Tool(DevTool):
                 decoded = base64.urlsafe_b64decode(cleaned)
             else:
                 decoded = base64.b64decode(cleaned)
-            return f"{decoded.decode('utf-8')}\n\nEncoded bytes: {len(cleaned)}, Decoded bytes: {len(decoded)}"
+            result = decoded.decode("utf-8")
+            return f"{result}\n\nEncoded bytes: {len(cleaned)}, Decoded bytes: {len(decoded)}"
         except Exception as e:
             return f"Error: Could not decode Base64: {e}"
 

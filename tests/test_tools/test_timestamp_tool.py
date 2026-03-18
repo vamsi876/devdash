@@ -1,6 +1,5 @@
 """Tests for TimestampTool - Unix timestamp and human date converter."""
 
-from unittest.mock import patch
 from datetime import datetime, timezone
 
 import pytest

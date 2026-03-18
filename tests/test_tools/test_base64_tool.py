@@ -40,7 +40,7 @@ class TestBase64Encode:
     def test_encode_unicode(self, tool: Base64Tool) -> None:
         result = tool.process("caf\u00e9", mode="encode")
         # Verify the encoded value is correct
-        expected = base64.b64encode("caf\u00e9".encode("utf-8")).decode("ascii")
+        expected = base64.b64encode("caf\u00e9".encode()).decode("ascii")
         assert expected in result
 
 

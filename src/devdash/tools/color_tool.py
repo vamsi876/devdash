@@ -7,9 +7,7 @@ from devdash.tools.base import DevTool
 
 _HEX_RE = re.compile(r"^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$")
 _RGB_RE = re.compile(r"^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$", re.IGNORECASE)
-_HSL_RE = re.compile(
-    r"^hsl\(\s*(\d{1,3})\s*,\s*(\d{1,3})%?\s*,\s*(\d{1,3})%?\s*\)$", re.IGNORECASE
-)
+_HSL_RE = re.compile(r"^hsl\(\s*(\d{1,3})\s*,\s*(\d{1,3})%?\s*,\s*(\d{1,3})%?\s*\)$", re.IGNORECASE)
 
 
 class ColorTool(DevTool):
@@ -31,7 +29,9 @@ class ColorTool(DevTool):
 
     def process(self, input_text: str, **kwargs: object) -> str:
         if not input_text.strip():
-            return "Error: Empty input. Provide a color (e.g., #FF0000, rgb(255,0,0), hsl(0,100,50))"
+            return (
+                "Error: Empty input. Provide a color (e.g., #FF0000, rgb(255,0,0), hsl(0,100,50))"
+            )
 
         text = input_text.strip()
 
@@ -99,8 +99,8 @@ class ColorTool(DevTool):
             f"Complementary: {comp_hex}"
         )
 
-    def _hsl_to_rgb(self, h: int, s: int, l: int) -> tuple[int, int, int]:
-        r, g, b = colorsys.hls_to_rgb(h / 360, l / 100, s / 100)
+    def _hsl_to_rgb(self, h: int, s: int, lightness: int) -> tuple[int, int, int]:
+        r, g, b = colorsys.hls_to_rgb(h / 360, lightness / 100, s / 100)
         return round(r * 255), round(g * 255), round(b * 255)
 
 

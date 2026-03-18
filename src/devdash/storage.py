@@ -10,7 +10,6 @@ import os
 import sqlite3
 import threading
 from pathlib import Path
-from typing import Optional
 
 from devdash.config import CONFIG_DIR
 
@@ -22,7 +21,7 @@ _init_lock = threading.Lock()
 _initialized = False
 
 
-def _truncate(text: Optional[str], limit: int = _PREVIEW_MAX) -> Optional[str]:
+def _truncate(text: str | None, limit: int = _PREVIEW_MAX) -> str | None:
     """Truncate *text* to *limit* characters, appending an ellipsis if cut."""
     if text is None:
         return None
@@ -130,8 +129,8 @@ class HistoryStore:
     def add_history(
         self,
         tool_name: str,
-        input_text: Optional[str] = None,
-        output_text: Optional[str] = None,
+        input_text: str | None = None,
+        output_text: str | None = None,
     ) -> None:
         """Record a tool invocation, then auto-cleanup old rows."""
         self._check_open()
@@ -149,9 +148,7 @@ class HistoryStore:
             con.close()
         self.cleanup(tool_name)
 
-    def get_history(
-        self, tool_name: str, limit: int = 20
-    ) -> list[dict]:
+    def get_history(self, tool_name: str, limit: int = 20) -> list[dict]:
         """Return the most recent *limit* history rows for *tool_name*."""
         self._check_open()
         con = _connect()
@@ -205,9 +202,7 @@ class HistoryStore:
         self._check_open()
         con = _connect()
         try:
-            cur = con.execute(
-                "DELETE FROM favorites WHERE id = ?", (favorite_id,)
-            )
+            cur = con.execute("DELETE FROM favorites WHERE id = ?", (favorite_id,))
             con.commit()
             return cur.rowcount > 0
         finally:
@@ -215,7 +210,7 @@ class HistoryStore:
 
     # -- maintenance --------------------------------------------------------
 
-    def cleanup(self, tool_name: Optional[str] = None) -> None:
+    def cleanup(self, tool_name: str | None = None) -> None:
         """Trim tool_history to the newest *_HISTORY_KEEP* rows per tool.
 
         If *tool_name* is given, only that tool is cleaned.  Otherwise
@@ -229,9 +224,7 @@ class HistoryStore:
             else:
                 tools = [
                     row["tool_name"]
-                    for row in con.execute(
-                        "SELECT DISTINCT tool_name FROM tool_history"
-                    ).fetchall()
+                    for row in con.execute("SELECT DISTINCT tool_name FROM tool_history").fetchall()
                 ]
 
             for name in tools:
