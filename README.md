@@ -2,7 +2,7 @@
 
 Open-source macOS menubar developer utilities at your fingertips.
 
-[![PyPI](https://img.shields.io/pypi/v/devdash.svg)](https://pypi.org/project/devdash)
+[![PyPI](https://img.shields.io/pypi/v/devdash-mac.svg)](https://pypi.org/project/devdash-mac)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -17,7 +17,7 @@ Open-source macOS menubar developer utilities at your fingertips.
 ## Quick Start
 
 ```bash
-pip install devdash
+pip install devdash-mac
 devdash
 ```
 
@@ -84,7 +84,7 @@ The config file is created automatically on first run with sensible defaults.
 ### From PyPI (Recommended)
 
 ```bash
-pip install devdash
+pip install devdash-mac
 devdash
 ```
 

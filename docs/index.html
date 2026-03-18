@@ -767,10 +767,10 @@ section { padding: 6rem clamp(1.5rem, 5vw, 4rem); }
       <div class="terminal-body">
         <div class="terminal-line">
           <span class="prompt">$</span>
-          <span class="cmd"><span class="type-text">pip install devdash</span></span>
+          <span class="cmd"><span class="type-text">pip install devdash-mac</span></span>
         </div>
         <div class="terminal-line">
-          <span class="output">Installing collected packages: devdash</span>
+          <span class="output">Installing collected packages: devdash-mac</span>
         </div>
         <div class="terminal-line">
           <span class="prompt">$</span>
@@ -911,7 +911,7 @@ section { padding: 6rem clamp(1.5rem, 5vw, 4rem); }
     </div>
     <div class="install-block reveal">
       <div class="code-block">
-        <code><span class="dollar">$</span> pip install <span class="pkg">devdash</span></code>
+        <code><span class="dollar">$</span> pip install <span class="pkg">devdash-mac</span></code>
         <button class="copy-btn" id="copyBtn" aria-label="Copy install command">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           <span>Copy</span>
@@ -969,7 +969,7 @@ links.querySelectorAll('a').forEach(a => {
 const copyBtn = document.getElementById('copyBtn');
 copyBtn.addEventListener('click', async () => {
   try {
-    await navigator.clipboard.writeText('pip install devdash');
+    await navigator.clipboard.writeText('pip install devdash-mac');
     copyBtn.classList.add('copied');
     copyBtn.querySelector('span').textContent = 'Copied!';
     setTimeout(() => {
@@ -979,7 +979,7 @@ copyBtn.addEventListener('click', async () => {
   } catch {
     /* Fallback for older browsers */
     const ta = document.createElement('textarea');
-    ta.value = 'pip install devdash';
+    ta.value = 'pip install devdash-mac';
     ta.style.position = 'fixed';
     ta.style.opacity = '0';
     document.body.appendChild(ta);

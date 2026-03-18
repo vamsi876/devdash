@@ -7,7 +7,7 @@ DevDash requires Python 3.10 or newer and runs on macOS only.
 The easiest way to get DevDash is via pip:
 
 ```bash
-pip install devdash
+pip install devdash-mac
 ```
 
 Then launch it:
@@ -105,7 +105,7 @@ pip list | grep devdash
 If not listed, reinstall:
 
 ```bash
-pip install devdash
+pip install devdash-mac
 ```
 
 ### App doesn't appear in menubar
