@@ -23,7 +23,7 @@ class HashTool(DevTool):
 
     @property
     def description(self) -> str:
-        return "Generate MD5, SHA-1, SHA-256, SHA-512, BLAKE2b hashes"
+        return "Enter text to generate MD5, SHA-256, and other hashes"
 
     def process(self, input_text: str, **kwargs: object) -> str:
         if not input_text.strip():

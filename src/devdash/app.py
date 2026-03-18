@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import threading
+import subprocess
 
 import rumps
 
@@ -33,6 +33,7 @@ class DevDashApp(rumps.App):
     def __init__(self) -> None:
         super().__init__(name=__app_name__, title="\U0001f527", quit_button=None)
         self._tools: list[DevTool] = discover_tools()
+        self._tool_map: dict[str, DevTool] = {}
         self._last_clipboard: str = ""
         self._build_menu()
         config = load_config()
@@ -55,7 +56,8 @@ class DevDashApp(rumps.App):
                 if current_category:
                     menu_items.append(None)
                 current_category = tool.category
-            item = rumps.MenuItem(tool.name, callback=self._make_tool_callback(tool))
+            item = rumps.MenuItem(tool.name, callback=self._on_tool_click)
+            self._tool_map[tool.name] = tool
             menu_items.append(item)
 
         menu_items.append(None)
@@ -67,53 +69,46 @@ class DevDashApp(rumps.App):
 
         self.menu = menu_items
 
-    def _make_tool_callback(self, tool: DevTool):  # type: ignore[no-untyped-def]
-        """Create a callback closure for a specific tool."""
-
-        def callback(_: rumps.MenuItem) -> None:
-            # Run in a thread so the menubar stays responsive
-            threading.Thread(
-                target=show_tool_dialog, args=(tool,), daemon=True
-            ).start()
-
-        return callback
+    def _on_tool_click(self, sender: rumps.MenuItem) -> None:
+        """Handle tool menu item click."""
+        tool = self._tool_map.get(sender.title)
+        if tool:
+            show_tool_dialog(tool)
 
     def _on_auto_detect(self, _: rumps.MenuItem) -> None:
         """Read clipboard, detect content type, open matching tool."""
+        content = clipboard.read()
+        if not content.strip():
+            _osascript_alert("DevDash", "Clipboard is empty")
+            return
 
-        def _detect_and_open() -> None:
-            content = clipboard.read()
-            if not content.strip():
-                notify("DevDash", "Clipboard is empty")
-                return
-
-            detected = clipboard.detect_type(content)
-            keyword_map = {
-                clipboard.ContentType.JSON: "json",
-                clipboard.ContentType.JWT: "jwt",
-                clipboard.ContentType.UUID: "uuid",
-                clipboard.ContentType.BASE64: "base64",
-                clipboard.ContentType.UNIX_TIMESTAMP: "timestamp",
-                clipboard.ContentType.URL: "url",
-                clipboard.ContentType.URL_ENCODED: "url",
-                clipboard.ContentType.HEX_COLOR: "color",
-                clipboard.ContentType.CRON: "cron",
-            }
-            keyword = keyword_map.get(detected)
-            if keyword:
-                for tool in self._tools:
-                    if tool.keyword == keyword:
-                        show_tool_dialog(tool, input_text=content)
-                        return
-            notify("DevDash", f"Detected: {detected.name}. No matching tool found.")
-
-        threading.Thread(target=_detect_and_open, daemon=True).start()
+        detected = clipboard.detect_type(content)
+        keyword_map = {
+            clipboard.ContentType.JSON: "json",
+            clipboard.ContentType.JWT: "jwt",
+            clipboard.ContentType.UUID: "uuid",
+            clipboard.ContentType.BASE64: "base64",
+            clipboard.ContentType.UNIX_TIMESTAMP: "timestamp",
+            clipboard.ContentType.URL: "url",
+            clipboard.ContentType.URL_ENCODED: "url",
+            clipboard.ContentType.HEX_COLOR: "color",
+            clipboard.ContentType.CRON: "cron",
+        }
+        keyword = keyword_map.get(detected)
+        if keyword:
+            for tool in self._tools:
+                if tool.keyword == keyword:
+                    show_tool_dialog(tool, input_text=content)
+                    return
+        _osascript_alert(
+            "DevDash", f"Detected: {detected.name}. No matching tool found."
+        )
 
     def _on_about(self, _: rumps.MenuItem) -> None:
         """Show about dialog."""
-        rumps.alert(
-            title=f"About {__app_name__}",
-            message=(
+        _osascript_alert(
+            f"About {__app_name__}",
+            (
                 f"{__app_name__} v{__version__}\n\n"
                 "Open-source macOS menubar developer utilities.\n"
                 "https://github.com/vamsi876/devdash"
@@ -145,6 +140,17 @@ class DevDashApp(rumps.App):
                 pass
 
         _watch_clipboard.start()  # type: ignore[attr-defined]
+
+
+def _osascript_alert(title: str, message: str) -> None:
+    """Show a simple alert via osascript."""
+    t = title.replace("\\", "\\\\").replace('"', '\\"')
+    m = message.replace("\\", "\\\\").replace('"', '\\"')
+    subprocess.run(
+        ["osascript", "-e", f'display alert "{t}" message "{m}"'],
+        capture_output=True,
+        timeout=30,
+    )
 
 
 def main() -> None:

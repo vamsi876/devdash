@@ -79,7 +79,7 @@ class UuidTool(DevTool):
 
     @property
     def description(self) -> str:
-        return "Generate UUID v4, v7, or ULID; validate UUIDs"
+        return "Enter 'v4', 'v7', or 'ulid' to generate. Paste a UUID to validate."
 
     def process(self, input_text: str, **kwargs: object) -> str:
         text = input_text.strip()

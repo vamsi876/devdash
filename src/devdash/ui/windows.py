@@ -1,56 +1,142 @@
-"""Custom rumps.Window wrappers for consistent tool UI."""
+"""Custom dialog wrappers using osascript for reliable macOS dialogs."""
 
 from __future__ import annotations
 
+import logging
+import re
+import subprocess
 from typing import TYPE_CHECKING
 
-import rumps
-
 from devdash import clipboard
-from devdash.ui.notifications import notify_copied, notify_error
+from devdash.ui.notifications import notify_copied
 
 if TYPE_CHECKING:
     from devdash.tools.base import DevTool
 
+logger = logging.getLogger(__name__)
+
+# Metadata patterns to strip when copying output
+_METADATA_RE = re.compile(
+    r"\s*\(entropy:.*?\)"  # password entropy
+    r"|\n\nOriginal bytes:.*"  # base64 byte counts
+    r"|\n\nEncoded bytes:.*"
+    r"|\n\n\[Auto-detected.*?\]"  # base64 auto-detect label
+    r"|\n\nWarning:.*",  # JWT warning
+    re.DOTALL,
+)
+
+
+def _escape(text: str) -> str:
+    """Escape text for use inside AppleScript strings."""
+    return (
+        text.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+        .replace("\r", "")
+        .replace("\t", "\\t")
+    )
+
+
+def _input_dialog(title: str, message: str, default: str = "") -> str | None:
+    """Show a native macOS input dialog via osascript.
+
+    Returns the entered text, or None if cancelled.
+    """
+    script = (
+        f'display dialog "{_escape(message)}" '
+        f'default answer "{_escape(default)}" '
+        f'with title "{_escape(title)}" '
+        f'buttons {{"Cancel", "Process"}} default button "Process"'
+        "\n"
+        "return text returned of result"
+    )
+    try:
+        r = subprocess.run(
+            ["osascript", "-e", script],
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+        if r.returncode == 0:
+            return r.stdout.strip()
+    except subprocess.TimeoutExpired:
+        logger.warning("Input dialog timed out for %s", title)
+    except Exception:
+        logger.exception("Failed to show input dialog")
+    return None
+
+
+def _output_dialog(title: str, result: str) -> bool:
+    """Show a native macOS output dialog via osascript.
+
+    Returns True if the user clicked 'Copy to Clipboard'.
+    """
+    # Truncate very long results for the dialog display
+    display = result if len(result) <= 1000 else result[:997] + "..."
+    script = (
+        f'display dialog "{_escape(display)}" '
+        f'with title "{_escape(title)}" '
+        f'buttons {{"Close", "Copy to Clipboard"}} '
+        f'default button "Copy to Clipboard"'
+    )
+    try:
+        r = subprocess.run(
+            ["osascript", "-e", script],
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+        if r.returncode == 0:
+            return "Copy to Clipboard" in r.stdout
+    except Exception:
+        logger.exception("Failed to show output dialog")
+    return False
+
+
+def _error_dialog(title: str, message: str) -> None:
+    """Show a native macOS error alert via osascript."""
+    script = (
+        f'display alert "{_escape(title)}" '
+        f'message "{_escape(message)}" as critical'
+    )
+    try:
+        subprocess.run(
+            ["osascript", "-e", script],
+            capture_output=True,
+            timeout=10,
+        )
+    except Exception:
+        logger.exception("Failed to show error dialog")
+
+
+def _clean_for_copy(result: str) -> str:
+    """Strip display-only metadata from result before copying."""
+    return _METADATA_RE.sub("", result).strip()
+
 
 def show_tool_dialog(tool: DevTool, input_text: str = "") -> None:
     """Show input window, process with tool, show output, offer clipboard copy."""
-    window = rumps.Window(
-        message=tool.description or f"Enter input for {tool.name}",
+    text = _input_dialog(
         title=tool.name,
-        default_text=input_text,
-        ok="Process",
-        cancel="Cancel",
-        dimensions=(320, 200),
+        message=tool.description or f"Enter input for {tool.name}",
+        default=input_text,
     )
-    response = window.run()
-    if not response.clicked:
+    if text is None:
         return
 
-    text = response.text
     error = tool.validate(text)
     if error:
-        notify_error(error)
+        _error_dialog("DevDash Error", error)
         return
 
     try:
         result = tool.process(text)
     except Exception as e:
-        notify_error(f"Error: {e}")
+        _error_dialog("DevDash Error", str(e))
         return
 
-    # Show output window
-    output_window = rumps.Window(
-        message="Result (click OK to copy to clipboard):",
-        title=f"{tool.name} - Output",
-        default_text=result,
-        ok="Copy to Clipboard",
-        cancel="Close",
-        dimensions=(320, 200),
-    )
-    out_response = output_window.run()
-    if out_response.clicked:
-        clipboard.write(result)
+    if _output_dialog(f"{tool.name} - Result", result):
+        clipboard.write(_clean_for_copy(result))
         notify_copied()
 
 
@@ -69,16 +155,12 @@ def show_multi_input_dialog(
     """
     values: list[str] = []
     for label, default in fields:
-        window = rumps.Window(
-            message=label,
+        text = _input_dialog(
             title=tool.name,
-            default_text=default,
-            ok="Next" if len(values) < len(fields) - 1 else "Process",
-            cancel="Cancel",
-            dimensions=(320, 150),
+            message=label,
+            default=default,
         )
-        response = window.run()
-        if not response.clicked:
+        if text is None:
             return None
-        values.append(response.text)
+        values.append(text)
     return values

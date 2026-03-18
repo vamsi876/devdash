@@ -20,7 +20,7 @@ class UrlTool(DevTool):
 
     @property
     def description(self) -> str:
-        return "URL encode/decode and parse URL components"
+        return "Paste a URL to parse, or enter text to URL-encode"
 
     def process(self, input_text: str, **kwargs: object) -> str:
         if not input_text.strip():

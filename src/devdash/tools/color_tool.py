@@ -25,7 +25,7 @@ class ColorTool(DevTool):
 
     @property
     def description(self) -> str:
-        return "Convert between HEX, RGB, HSL, and HSV color formats"
+        return "Enter a color: #hex, rgb(r,g,b), or hsl(h,s,l)"
 
     def process(self, input_text: str, **kwargs: object) -> str:
         if not input_text.strip():

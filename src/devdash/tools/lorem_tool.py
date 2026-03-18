@@ -44,7 +44,7 @@ class LoremTool(DevTool):
 
     @property
     def description(self) -> str:
-        return "Generate lorem ipsum text by words, sentences, or paragraphs"
+        return "Enter amount, e.g. '5 words', '3 sentences', or '2 paragraphs'"
 
     def process(self, input_text: str, **kwargs: object) -> str:
         text = input_text.strip().lower()

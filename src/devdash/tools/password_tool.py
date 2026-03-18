@@ -305,7 +305,7 @@ class PasswordTool(DevTool):
 
     @property
     def description(self) -> str:
-        return "Generate secure passwords or passphrases"
+        return "Enter password length (8-128) or 'passphrase'"
 
     def process(self, input_text: str, **kwargs: object) -> str:
         text = input_text.strip().lower()
@@ -345,6 +345,7 @@ class PasswordTool(DevTool):
         results: list[str] = []
         for _ in range(count):
             password = "".join(secrets.choice(charset) for _ in range(length))
+            entropy = self._entropy(length, len(charset))
             entropy = self._entropy(length, len(charset))
             results.append(f"{password}  (entropy: {entropy:.0f} bits)")
 

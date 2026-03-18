@@ -20,7 +20,7 @@ class JsonTool(DevTool):
 
     @property
     def description(self) -> str:
-        return "Format, validate, or minify JSON"
+        return "Paste JSON to format and pretty-print"
 
     def process(self, input_text: str, **kwargs: object) -> str:
         if not input_text.strip():

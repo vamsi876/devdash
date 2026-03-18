@@ -33,7 +33,7 @@ class CronTool(DevTool):
 
     @property
     def description(self) -> str:
-        return "Parse cron expressions to human-readable descriptions"
+        return "Enter a cron expression (e.g. '*/5 * * * *') or leave empty for presets"
 
     def process(self, input_text: str, **kwargs: object) -> str:
         if not input_text.strip():

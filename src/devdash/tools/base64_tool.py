@@ -32,7 +32,7 @@ class Base64Tool(DevTool):
 
     @property
     def description(self) -> str:
-        return "Encode or decode Base64 (standard and URL-safe)"
+        return "Enter text to encode, or paste Base64 to decode"
 
     def process(self, input_text: str, **kwargs: object) -> str:
         if not input_text.strip():

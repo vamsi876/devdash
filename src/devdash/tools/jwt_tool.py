@@ -23,7 +23,7 @@ class JwtTool(DevTool):
 
     @property
     def description(self) -> str:
-        return "Decode JWT tokens (header + payload + expiry check)"
+        return "Paste a JWT token to decode header, payload, and expiry"
 
     def process(self, input_text: str, **kwargs: object) -> str:
         if not input_text.strip():

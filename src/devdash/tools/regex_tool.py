@@ -28,7 +28,7 @@ class RegexTool(DevTool):
 
     @property
     def description(self) -> str:
-        return "Test regex patterns with match highlighting"
+        return "Enter pattern and test string separated by ---"
 
     def process(self, input_text: str, **kwargs: object) -> str:
         # Check kwargs first

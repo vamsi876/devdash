@@ -61,7 +61,7 @@ class TimestampTool(DevTool):
 
     @property
     def description(self) -> str:
-        return "Convert between Unix timestamps and human-readable dates"
+        return "Enter a Unix timestamp or date. Leave empty for current time."
 
     def process(self, input_text: str, **kwargs: object) -> str:
         if not input_text.strip():
