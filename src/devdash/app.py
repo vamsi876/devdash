@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import threading
+
 import rumps
 
 from devdash import __app_name__, __version__, clipboard
@@ -33,7 +35,6 @@ class DevDashApp(rumps.App):
         self._tools: list[DevTool] = discover_tools()
         self._last_clipboard: str = ""
         self._build_menu()
-        # Start clipboard watcher if enabled in config
         config = load_config()
         if config.get("clipboard_watcher", False):
             self._start_clipboard_watcher()
@@ -42,24 +43,23 @@ class DevDashApp(rumps.App):
         """Build the menubar dropdown from discovered tools."""
         menu_items: list[rumps.MenuItem | None] = []
 
-        # Auto-detect clipboard item
-        auto_detect = rumps.MenuItem("Clipboard: Auto-detect", callback=self._on_auto_detect)
+        auto_detect = rumps.MenuItem(
+            "Clipboard: Auto-detect", callback=self._on_auto_detect
+        )
         menu_items.append(auto_detect)
-        menu_items.append(None)  # separator
+        menu_items.append(None)
 
-        # Group tools by category
         current_category = ""
         for tool in self._tools:
             if tool.category != current_category:
                 if current_category:
-                    menu_items.append(None)  # separator between categories
+                    menu_items.append(None)
                 current_category = tool.category
             item = rumps.MenuItem(tool.name, callback=self._make_tool_callback(tool))
             menu_items.append(item)
 
-        menu_items.append(None)  # separator
+        menu_items.append(None)
 
-        # About and Quit
         about = rumps.MenuItem(f"About {__app_name__}", callback=self._on_about)
         quit_item = rumps.MenuItem("Quit", callback=self._on_quit)
         menu_items.append(about)
@@ -71,45 +71,53 @@ class DevDashApp(rumps.App):
         """Create a callback closure for a specific tool."""
 
         def callback(_: rumps.MenuItem) -> None:
-            show_tool_dialog(tool)
+            # Run in a thread so the menubar stays responsive
+            threading.Thread(
+                target=show_tool_dialog, args=(tool,), daemon=True
+            ).start()
 
         return callback
 
     def _on_auto_detect(self, _: rumps.MenuItem) -> None:
         """Read clipboard, detect content type, open matching tool."""
-        content = clipboard.read()
-        if not content.strip():
-            notify("DevDash", "Clipboard is empty")
-            return
 
-        detected = clipboard.detect_type(content)
-        # Find matching tool by keyword
-        keyword_map = {
-            clipboard.ContentType.JSON: "json",
-            clipboard.ContentType.JWT: "jwt",
-            clipboard.ContentType.UUID: "uuid",
-            clipboard.ContentType.BASE64: "base64",
-            clipboard.ContentType.UNIX_TIMESTAMP: "timestamp",
-            clipboard.ContentType.URL: "url",
-            clipboard.ContentType.URL_ENCODED: "url",
-            clipboard.ContentType.HEX_COLOR: "color",
-            clipboard.ContentType.CRON: "cron",
-        }
-        keyword = keyword_map.get(detected)
-        if keyword:
-            for tool in self._tools:
-                if tool.keyword == keyword:
-                    show_tool_dialog(tool, input_text=content)
-                    return
-        notify("DevDash", f"Detected: {detected.name}. No matching tool found.")
+        def _detect_and_open() -> None:
+            content = clipboard.read()
+            if not content.strip():
+                notify("DevDash", "Clipboard is empty")
+                return
+
+            detected = clipboard.detect_type(content)
+            keyword_map = {
+                clipboard.ContentType.JSON: "json",
+                clipboard.ContentType.JWT: "jwt",
+                clipboard.ContentType.UUID: "uuid",
+                clipboard.ContentType.BASE64: "base64",
+                clipboard.ContentType.UNIX_TIMESTAMP: "timestamp",
+                clipboard.ContentType.URL: "url",
+                clipboard.ContentType.URL_ENCODED: "url",
+                clipboard.ContentType.HEX_COLOR: "color",
+                clipboard.ContentType.CRON: "cron",
+            }
+            keyword = keyword_map.get(detected)
+            if keyword:
+                for tool in self._tools:
+                    if tool.keyword == keyword:
+                        show_tool_dialog(tool, input_text=content)
+                        return
+            notify("DevDash", f"Detected: {detected.name}. No matching tool found.")
+
+        threading.Thread(target=_detect_and_open, daemon=True).start()
 
     def _on_about(self, _: rumps.MenuItem) -> None:
         """Show about dialog."""
         rumps.alert(
             title=f"About {__app_name__}",
-            message=f"{__app_name__} v{__version__}\n\n"
-            "Open-source macOS menubar developer utilities.\n"
-            "https://github.com/devdash/devdash",
+            message=(
+                f"{__app_name__} v{__version__}\n\n"
+                "Open-source macOS menubar developer utilities.\n"
+                "https://github.com/vamsi876/devdash"
+            ),
         )
 
     def _on_quit(self, _: rumps.MenuItem) -> None:
@@ -134,7 +142,7 @@ class DevDashApp(rumps.App):
                         f"Detected {type_name} in your clipboard. Click to process.",
                     )
             except Exception:
-                pass  # Never crash the watcher
+                pass
 
         _watch_clipboard.start()  # type: ignore[attr-defined]
 
