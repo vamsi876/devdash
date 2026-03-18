@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevDash — macOS Menubar Developer Utilities</title>
+<meta name="description" content="Open-source macOS menubar app with 12 developer tools. JSON Formatter, JWT Decoder, UUID Generator, Base64, Hash Generator, and more.">
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-deep: #0a0e17;
+  --bg-card: #111827;
+  --bg-card-hover: #1a2332;
+  --bg-surface: #0f1623;
+  --border-subtle: #1e293b;
+  --border-accent: #2d3b4f;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --green-bright: #4ade80;
+  --green-dim: #22c55e;
+  --green-glow: rgba(74, 222, 128, 0.15);
+  --blue-bright: #60a5fa;
+  --blue-dim: #3b82f6;
+  --blue-glow: rgba(96, 165, 250, 0.12);
+  --purple-bright: #c084fc;
+  --purple-dim: #a855f7;
+  --purple-glow: rgba(192, 132, 252, 0.12);
+  --orange-bright: #fb923c;
+  --yellow-bright: #fbbf24;
+  --pink-bright: #f472b6;
+  --cyan-bright: #22d3ee;
+  --nav-height: 60px;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ===== Sticky Nav ===== */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: var(--nav-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(1.5rem, 4vw, 3rem);
+  background: rgba(10, 14, 23, 0.75);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.nav.scrolled {
+  background: rgba(10, 14, 23, 0.92);
+  box-shadow: 0 1px 24px rgba(0,0,0,0.4);
+}
+
+.nav-logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-logo .chevron { color: var(--green-bright); }
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  align-items: center;
+}
+
+.nav-links a {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+  position: relative;
+}
+
+.nav-links a:hover { color: var(--text-primary); }
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--green-bright);
+  transition: width 0.25s ease;
+}
+
+.nav-links a:hover::after { width: 100%; }
+
+.nav-github {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--border-accent);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.nav-github:hover {
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.03);
+}
+
+.nav-github svg { width: 18px; height: 18px; fill: currentColor; }
+
+/* Mobile nav toggle */
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text-secondary);
+  margin: 5px 0;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+/* ===== Sections ===== */
+section { padding: 6rem clamp(1.5rem, 5vw, 4rem); }
+
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.section-label {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--green-bright);
+  margin-bottom: 0.75rem;
+}
+
+.section-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+.section-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  line-height: 1.7;
+}
+
+/* ===== Hero ===== */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: calc(var(--nav-height) + 2rem);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(74,222,128,0.06) 0%, rgba(96,165,250,0.04) 40%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-inner {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 1rem;
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--green-bright);
+  margin-bottom: 2rem;
+}
+
+.hero-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green-bright);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.hero h1 {
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin-bottom: 1.25rem;
+  background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero h1 .accent {
+  background: linear-gradient(135deg, var(--green-bright) 0%, var(--cyan-bright) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: clamp(1.05rem, 2.5vw, 1.35rem);
+  color: var(--text-secondary);
+  max-width: 540px;
+  margin: 0 auto 3rem;
+  line-height: 1.6;
+}
+
+/* Terminal */
+.terminal {
+  max-width: 560px;
+  margin: 0 auto;
+  background: #0d1117;
+  border: 1px solid var(--border-accent);
+  border-radius: 12px;
+  overflow: hidden;
+  text-align: left;
+  box-shadow:
+    0 4px 24px rgba(0,0,0,0.4),
+    0 0 0 1px rgba(255,255,255,0.03),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #161b22;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.terminal-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.terminal-dot.red { background: #ff5f57; }
+.terminal-dot.yellow { background: #febc2e; }
+.terminal-dot.green { background: #28c840; }
+
+.terminal-bar span {
+  flex: 1;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+.terminal-body {
+  padding: 1.25rem 1.5rem;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', Menlo, monospace;
+  font-size: 0.9rem;
+  line-height: 1.8;
+  min-height: 160px;
+}
+
+.terminal-line {
+  display: flex;
+  gap: 0;
+  opacity: 0;
+  animation: fade-in 0.3s ease forwards;
+}
+
+.terminal-line:nth-child(1) { animation-delay: 0.5s; }
+.terminal-line:nth-child(2) { animation-delay: 1.8s; }
+.terminal-line:nth-child(3) { animation-delay: 3.0s; }
+.terminal-line:nth-child(4) { animation-delay: 3.6s; }
+.terminal-line:nth-child(5) { animation-delay: 4.2s; }
+
+@keyframes fade-in {
+  to { opacity: 1; }
+}
+
+.prompt { color: var(--green-bright); margin-right: 0.5rem; white-space: pre; }
+.cmd { color: var(--text-primary); }
+.flag { color: var(--purple-bright); }
+.output { color: var(--text-muted); }
+.success { color: var(--green-bright); }
+.comment { color: var(--text-muted); font-style: italic; }
+
+.typing-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.1em;
+  background: var(--green-bright);
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Typing animation for command text */
+.type-text {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  animation: typing 0.8s steps(20, end) forwards;
+}
+
+.terminal-line:nth-child(1) .type-text { animation-delay: 0.5s; width: 0; }
+.terminal-line:nth-child(3) .type-text { animation-delay: 3.0s; width: 0; }
+
+@keyframes typing {
+  to { width: 100%; }
+}
+
+/* ===== Features Grid ===== */
+#features { padding-top: 5rem; }
+
+.features-header {
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
+
+.features-header .section-subtitle {
+  margin: 0 auto;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1px;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.feature-card {
+  background: var(--bg-card);
+  padding: 1.75rem;
+  transition: background 0.25s ease;
+  cursor: default;
+  position: relative;
+}
+
+.feature-card:hover {
+  background: var(--bg-card-hover);
+}
+
+.feature-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.feature-card:hover::after { opacity: 1; }
+
+.feature-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.75rem;
+  display: block;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-subtle);
+}
+
+.feature-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.feature-card p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+/* ===== Clipboard Section ===== */
+.clipboard-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.clipboard-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.clipboard-visual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clipboard-demo {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+.clipboard-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+
+.clipboard-step + .clipboard-step {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.step-num {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.step-num.s1 { background: var(--green-glow); color: var(--green-bright); border: 1px solid rgba(74,222,128,0.2); }
+.step-num.s2 { background: var(--blue-glow); color: var(--blue-bright); border: 1px solid rgba(96,165,250,0.2); }
+.step-num.s3 { background: var(--purple-glow); color: var(--purple-bright); border: 1px solid rgba(192,132,252,0.2); }
+
+.step-text h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.step-text p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+/* Arrow between steps */
+.clipboard-arrow {
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem 0;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  opacity: 0.5;
+}
+
+/* ===== Install Section ===== */
+#install {
+  text-align: center;
+}
+
+.install-block {
+  max-width: 520px;
+  margin: 2rem auto 0;
+}
+
+.code-block {
+  position: relative;
+  background: #0d1117;
+  border: 1px solid var(--border-accent);
+  border-radius: 10px;
+  padding: 1.15rem 1.5rem;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', Menlo, monospace;
+  font-size: 0.95rem;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.code-block code {
+  color: var(--text-primary);
+}
+
+.code-block .dollar { color: var(--text-muted); margin-right: 0.5rem; }
+.code-block .pkg { color: var(--green-bright); }
+
+.copy-btn {
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-accent);
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  font-family: inherit;
+}
+
+.copy-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.copy-btn.copied {
+  color: var(--green-bright);
+  border-color: rgba(74,222,128,0.3);
+  background: var(--green-glow);
+}
+
+.copy-btn svg { width: 14px; height: 14px; }
+
+.install-note {
+  margin-top: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.install-note code {
+  background: rgba(255,255,255,0.05);
+  padding: 0.15em 0.5em;
+  border-radius: 4px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.85em;
+}
+
+/* ===== Footer ===== */
+.footer {
+  border-top: 1px solid var(--border-subtle);
+  padding: 2.5rem clamp(1.5rem, 5vw, 4rem);
+}
+
+.footer-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-left {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.footer-left strong {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+}
+
+.footer-links a {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.footer-links a:hover { color: var(--text-primary); }
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .clipboard-inner {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .clipboard-content { text-align: center; }
+  .clipboard-content .section-subtitle { margin: 0 auto; }
+}
+
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+
+  .nav-links.open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: var(--nav-height);
+    left: 0;
+    right: 0;
+    background: rgba(10, 14, 23, 0.97);
+    backdrop-filter: blur(20px);
+    padding: 1.5rem 2rem;
+    gap: 1.25rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .nav-toggle { display: block; }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.5rem, 10vw, 3.5rem);
+  }
+
+  section {
+    padding: 4rem 1.25rem;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .features-grid {
+    border-radius: 12px;
+  }
+
+  .feature-card {
+    padding: 1.25rem;
+  }
+
+  .terminal {
+    margin: 0 -0.5rem;
+    border-radius: 10px;
+  }
+
+  .code-block {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .copy-btn { justify-content: center; }
+}
+
+/* ===== Scroll reveal ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children */
+.features-grid .feature-card.reveal { transition-delay: calc(var(--i, 0) * 0.06s); }
+</style>
+</head>
+<body>
+
+<!-- ===== Nav ===== -->
+<nav class="nav" id="nav">
+  <a href="#" class="nav-logo"><span class="chevron">&gt;</span> DevDash</a>
+  <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#clipboard">Clipboard</a></li>
+    <li><a href="#install">Install</a></li>
+    <li>
+      <a href="https://github.com/vamsikrishnakollipara/devdash" class="nav-github" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </li>
+  </ul>
+</nav>
+
+<!-- ===== Hero ===== -->
+<section class="hero" id="hero">
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> Open Source &middot; MIT License</div>
+    <h1>Dev<span class="accent">Dash</span></h1>
+    <p class="hero-subtitle">12 developer utilities in your macOS menubar. Format, decode, generate, convert &mdash; all one click away.</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="terminal-dot red"></div>
+        <div class="terminal-dot yellow"></div>
+        <div class="terminal-dot green"></div>
+        <span>Terminal</span>
+      </div>
+      <div class="terminal-body">
+        <div class="terminal-line">
+          <span class="prompt">$</span>
+          <span class="cmd"><span class="type-text">pip install devdash</span></span>
+        </div>
+        <div class="terminal-line">
+          <span class="output">Installing collected packages: devdash</span>
+        </div>
+        <div class="terminal-line">
+          <span class="prompt">$</span>
+          <span class="cmd"><span class="type-text">devdash</span></span>
+        </div>
+        <div class="terminal-line">
+          <span class="success">&#10003; DevDash running in menubar</span>
+        </div>
+        <div class="terminal-line">
+          <span class="comment"># 12 tools ready &mdash; click the menubar icon</span>
+          <span class="typing-cursor"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Features ===== -->
+<section id="features">
+  <div class="container">
+    <div class="features-header reveal">
+      <span class="section-label">Tools</span>
+      <h2 class="section-title">12 tools. Zero context-switching.</h2>
+      <p class="section-subtitle">Everything you reach for daily, accessible from a single menubar icon.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card reveal" style="--i:0">
+        <span class="feature-icon">{&thinsp;}</span>
+        <h3>JSON Formatter</h3>
+        <p>Pretty-print, minify, and validate JSON with syntax highlighting and error reporting.</p>
+      </div>
+      <div class="feature-card reveal" style="--i:1">
+        <span class="feature-icon">&#128273;</span>
+        <h3>JWT Decoder</h3>
+        <p>Decode JWT headers and payloads instantly. Verify expiration and inspect claims.</p>
+      </div>
+      <div class="feature-card reveal" style="--i:2">
+        <span class="feature-icon">&#128737;</span>
+        <h3>UUID / ULID Generator</h3>
+        <p>Generate v4 UUIDs and ULIDs in bulk. Copy with one click, sorted by creation time.</p>
+      </div>
+      <div class="feature-card reveal" style="--i:3">
+        <span class="feature-icon">&#128260;</span>
+        <h3>Base64 Encode/Decode</h3>
+        <p>Encode and decode Base64 strings. Handles text and detects binary content.</p>
+      </div>
+      <div class="feature-card reveal" style="--i:4">
+        <span class="feature-icon">#&#8419;</span>
+        <h3>Hash Generator</h3>
+        <p>Compute MD5, SHA-1, SHA-256, and SHA-512 hashes for any input string.</p>
+      </div>
+      <div class="feature-card reveal" style="--i:5">
+        <span class="feature-icon">&#128339;</span>
+        <h3>Timestamp Converter</h3>
+        <p>Convert between Unix timestamps and human-readable dates across time zones.</p>
+      </div>
+      <div class="feature-card reveal" style="--i:6">
+        <span class="feature-icon">&#128279;</span>
+        <h3>URL Encode/Decode</h3>
+        <p>Percent-encode and decode URLs and query parameters safely.</p>
+      </div>
+      <div class="feature-card reveal" style="--i:7">
+        <span class="feature-icon">&#128270;</span>
+        <h3>Regex Tester</h3>
+        <p>Write and test regular expressions with live match highlighting and group capture.</p>
+      </div>
+      <div class="feature-card reveal" style="--i:8">
+        <span class="feature-icon">&#127912;</span>
+        <h3>Color Converter</h3>
+        <p>Convert between HEX, RGB, HSL, and HSB with a live color preview swatch.</p>
+      </div>
+      <div class="feature-card reveal" style="--i:9">
+        <span class="feature-icon">&#128220;</span>
+        <h3>Lorem Ipsum Generator</h3>
+        <p>Generate placeholder text by words, sentences, or paragraphs on demand.</p>
+      </div>
+      <div class="feature-card reveal" style="--i:10">
+        <span class="feature-icon">&#128274;</span>
+        <h3>Password Generator</h3>
+        <p>Create cryptographically secure passwords with configurable length and character sets.</p>
+      </div>
+      <div class="feature-card reveal" style="--i:11">
+        <span class="feature-icon">&#9200;</span>
+        <h3>Cron Parser</h3>
+        <p>Parse and validate cron expressions with human-readable schedule descriptions.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Smart Clipboard ===== -->
+<section id="clipboard" class="clipboard-section">
+  <div class="container">
+    <div class="clipboard-inner">
+      <div class="clipboard-content reveal">
+        <span class="section-label">Workflow</span>
+        <h2 class="section-title">Smart Clipboard</h2>
+        <p class="section-subtitle">DevDash watches your clipboard. Copy a JWT and the decoder opens automatically. Copy JSON and it formats instantly. No searching, no switching &mdash; the right tool appears when you need it.</p>
+      </div>
+      <div class="clipboard-visual reveal">
+        <div class="clipboard-demo">
+          <div class="clipboard-step">
+            <span class="step-num s1">1</span>
+            <div class="step-text">
+              <h4>Copy anything</h4>
+              <p>Copy a JWT, JSON blob, Unix timestamp, or Base64 string to your clipboard.</p>
+            </div>
+          </div>
+          <div class="clipboard-arrow">&#9660;</div>
+          <div class="clipboard-step">
+            <span class="step-num s2">2</span>
+            <div class="step-text">
+              <h4>Auto-detect</h4>
+              <p>DevDash identifies the content type and routes to the right tool instantly.</p>
+            </div>
+          </div>
+          <div class="clipboard-arrow">&#9660;</div>
+          <div class="clipboard-step">
+            <span class="step-num s3">3</span>
+            <div class="step-text">
+              <h4>Result ready</h4>
+              <p>Formatted output is one click from your clipboard. Paste and move on.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Install ===== -->
+<section id="install">
+  <div class="container">
+    <div class="reveal">
+      <span class="section-label">Get started</span>
+      <h2 class="section-title">Install in seconds</h2>
+      <p class="section-subtitle" style="margin: 0.5rem auto 0;">Requires Python 3.11+ and macOS.</p>
+    </div>
+    <div class="install-block reveal">
+      <div class="code-block">
+        <code><span class="dollar">$</span> pip install <span class="pkg">devdash</span></code>
+        <button class="copy-btn" id="copyBtn" aria-label="Copy install command">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span>Copy</span>
+        </button>
+      </div>
+      <p class="install-note">Then run <code>devdash</code> to launch. Use <code>devdash --help</code> for options.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-left"><strong>DevDash</strong> &middot; MIT License</div>
+    <ul class="footer-links">
+      <li><a href="https://github.com/vamsikrishnakollipara/devdash" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://github.com/vamsikrishnakollipara/devdash/issues" target="_blank" rel="noopener">Issues</a></li>
+      <li><a href="https://github.com/vamsikrishnakollipara/devdash/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+/* ===== Nav scroll effect ===== */
+const nav = document.getElementById('nav');
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+}, { passive: true });
+
+/* ===== Mobile nav toggle ===== */
+const toggle = document.getElementById('navToggle');
+const links = document.getElementById('navLinks');
+toggle.addEventListener('click', () => {
+  links.classList.toggle('open');
+  const spans = toggle.querySelectorAll('span');
+  const isOpen = links.classList.contains('open');
+  spans[0].style.transform = isOpen ? 'rotate(45deg) translate(5px, 5px)' : '';
+  spans[1].style.opacity = isOpen ? '0' : '1';
+  spans[2].style.transform = isOpen ? 'rotate(-45deg) translate(5px, -5px)' : '';
+});
+
+/* Close mobile nav on link click */
+links.querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => {
+    links.classList.remove('open');
+    const spans = toggle.querySelectorAll('span');
+    spans[0].style.transform = '';
+    spans[1].style.opacity = '1';
+    spans[2].style.transform = '';
+  });
+});
+
+/* ===== Copy to clipboard ===== */
+const copyBtn = document.getElementById('copyBtn');
+copyBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText('pip install devdash');
+    copyBtn.classList.add('copied');
+    copyBtn.querySelector('span').textContent = 'Copied!';
+    setTimeout(() => {
+      copyBtn.classList.remove('copied');
+      copyBtn.querySelector('span').textContent = 'Copy';
+    }, 2000);
+  } catch {
+    /* Fallback for older browsers */
+    const ta = document.createElement('textarea');
+    ta.value = 'pip install devdash';
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    copyBtn.classList.add('copied');
+    copyBtn.querySelector('span').textContent = 'Copied!';
+    setTimeout(() => {
+      copyBtn.classList.remove('copied');
+      copyBtn.querySelector('span').textContent = 'Copy';
+    }, 2000);
+  }
+});
+
+/* ===== Scroll reveal ===== */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
