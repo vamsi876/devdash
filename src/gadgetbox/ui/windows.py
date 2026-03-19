@@ -10,7 +10,7 @@ import logging
 import re
 import subprocess
 import sys
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from gadgetbox import clipboard
 from gadgetbox.ui.notifications import notify_copied
@@ -144,11 +144,25 @@ def _ensure_root():  # type: ignore[no-untyped-def]
     return root
 
 
+def _bring_to_front(win: Any) -> None:
+    """Force a tkinter window to appear in front of all other windows."""
+    win.attributes("-topmost", True)
+    win.after(100, lambda: win.attributes("-topmost", False))
+    win.lift()
+    win.focus_force()
+
+
 def _tk_input_dialog(title: str, message: str, default: str = "") -> str | None:
     """Show a tkinter input dialog."""
     from tkinter import simpledialog
 
     root = _ensure_root()
+    # Briefly show root so child dialogs appear in foreground on Windows
+    root.deiconify()
+    root.attributes("-topmost", True)
+    root.update()
+    root.withdraw()
+    root.attributes("-topmost", False)
     return simpledialog.askstring(title, message, initialvalue=default, parent=root)
 
 
@@ -182,7 +196,7 @@ def _tk_output_dialog(title: str, result: str) -> bool:
 
     win.transient(root)
     win.grab_set()
-    win.focus_force()
+    _bring_to_front(win)
     root.wait_window(win)
     return copied
 
@@ -192,6 +206,11 @@ def _tk_error_dialog(title: str, message: str) -> None:
     from tkinter import messagebox
 
     root = _ensure_root()
+    root.deiconify()
+    root.attributes("-topmost", True)
+    root.update()
+    root.withdraw()
+    root.attributes("-topmost", False)
     messagebox.showerror(title, message, parent=root)
 
 
@@ -200,6 +219,11 @@ def _tk_info_dialog(title: str, message: str) -> None:
     from tkinter import messagebox
 
     root = _ensure_root()
+    root.deiconify()
+    root.attributes("-topmost", True)
+    root.update()
+    root.withdraw()
+    root.attributes("-topmost", False)
     messagebox.showinfo(title, message, parent=root)
 
 
