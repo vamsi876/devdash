@@ -1,11 +1,15 @@
-"""Cross-platform dialog wrappers using tkinter."""
+"""Cross-platform dialog wrappers.
+
+macOS: native dialogs via osascript (AppKit owns the main thread).
+Windows/Linux: tkinter dialogs.
+"""
 
 from __future__ import annotations
 
 import logging
 import re
-import tkinter as tk
-from tkinter import messagebox, simpledialog
+import subprocess
+import sys
 from typing import TYPE_CHECKING
 
 from gadgetbox import clipboard
@@ -15,6 +19,8 @@ if TYPE_CHECKING:
     from gadgetbox.tools.base import DevTool
 
 logger = logging.getLogger(__name__)
+
+_IS_MACOS = sys.platform == "darwin"
 
 # Metadata patterns to strip when copying output
 _METADATA_RE = re.compile(
@@ -27,8 +33,106 @@ _METADATA_RE = re.compile(
 )
 
 
-def _ensure_root() -> tk.Tk:
+# ---------------------------------------------------------------------------
+# macOS dialogs via osascript
+# ---------------------------------------------------------------------------
+
+
+def _osa_input_dialog(title: str, message: str, default: str = "") -> str | None:
+    """Show a native macOS input dialog. Returns text or None if cancelled."""
+    # Escape double-quotes and backslashes for AppleScript
+    esc_title = title.replace("\\", "\\\\").replace('"', '\\"')
+    esc_msg = message.replace("\\", "\\\\").replace('"', '\\"')
+    esc_default = default.replace("\\", "\\\\").replace('"', '\\"')
+    script = (
+        f'display dialog "{esc_msg}" '
+        f'with title "{esc_title}" '
+        f'default answer "{esc_default}" '
+        f'buttons {{"Cancel", "OK"}} default button "OK"'
+    )
+    try:
+        result = subprocess.run(
+            ["osascript", "-e", script],
+            capture_output=True, text=True, timeout=300,
+        )
+        if result.returncode != 0:
+            return None  # User clicked Cancel
+        # Output format: "button returned:OK, text returned:user input"
+        output = result.stdout.strip()
+        prefix = "text returned:"
+        idx = output.find(prefix)
+        if idx >= 0:
+            return output[idx + len(prefix):]
+        return output
+    except Exception:
+        logger.debug("osascript input dialog failed", exc_info=True)
+        return None
+
+
+def _osa_output_dialog(title: str, result: str) -> bool:
+    """Show output with Copy button. Returns True if user clicked Copy."""
+    esc_title = title.replace("\\", "\\\\").replace('"', '\\"')
+    # Truncate very long output for the dialog
+    display_text = result[:2000] + ("..." if len(result) > 2000 else "")
+    esc_result = display_text.replace("\\", "\\\\").replace('"', '\\"')
+    script = (
+        f'display dialog "{esc_result}" '
+        f'with title "{esc_title}" '
+        f'buttons {{"Close", "Copy to Clipboard"}} default button "Copy to Clipboard"'
+    )
+    try:
+        proc = subprocess.run(
+            ["osascript", "-e", script],
+            capture_output=True, text=True, timeout=300,
+        )
+        return "Copy to Clipboard" in proc.stdout
+    except Exception:
+        logger.debug("osascript output dialog failed", exc_info=True)
+        return False
+
+
+def _osa_error_dialog(title: str, message: str) -> None:
+    """Show a native macOS error alert."""
+    esc_title = title.replace("\\", "\\\\").replace('"', '\\"')
+    esc_msg = message.replace("\\", "\\\\").replace('"', '\\"')
+    script = (
+        f'display alert "{esc_title}" message "{esc_msg}" '
+        f'as critical buttons {{"OK"}} default button "OK"'
+    )
+    try:
+        subprocess.run(
+            ["osascript", "-e", script],
+            capture_output=True, text=True, timeout=30,
+        )
+    except Exception:
+        logger.debug("osascript error dialog failed", exc_info=True)
+
+
+def _osa_info_dialog(title: str, message: str) -> None:
+    """Show a native macOS info alert."""
+    esc_title = title.replace("\\", "\\\\").replace('"', '\\"')
+    esc_msg = message.replace("\\", "\\\\").replace('"', '\\"')
+    script = (
+        f'display alert "{esc_title}" message "{esc_msg}" '
+        f'buttons {{"OK"}} default button "OK"'
+    )
+    try:
+        subprocess.run(
+            ["osascript", "-e", script],
+            capture_output=True, text=True, timeout=30,
+        )
+    except Exception:
+        logger.debug("osascript info dialog failed", exc_info=True)
+
+
+# ---------------------------------------------------------------------------
+# tkinter dialogs (Windows / Linux)
+# ---------------------------------------------------------------------------
+
+def _ensure_root():  # type: ignore[no-untyped-def]
     """Get or create a hidden tkinter root window."""
+    import tkinter as tk
+
     try:
         root = tk._default_root  # type: ignore[attr-defined]
         if root is not None and root.winfo_exists():
@@ -40,23 +144,18 @@ def _ensure_root() -> tk.Tk:
     return root
 
 
-def _input_dialog(title: str, message: str, default: str = "") -> str | None:
-    """Show an input dialog. Returns entered text, or None if cancelled."""
+def _tk_input_dialog(title: str, message: str, default: str = "") -> str | None:
+    """Show a tkinter input dialog."""
+    from tkinter import simpledialog
+
     root = _ensure_root()
-    result = simpledialog.askstring(
-        title,
-        message,
-        initialvalue=default,
-        parent=root,
-    )
-    return result
+    return simpledialog.askstring(title, message, initialvalue=default, parent=root)
 
 
-def _output_dialog(title: str, result: str) -> bool:
-    """Show output in a dialog with a Copy button.
+def _tk_output_dialog(title: str, result: str) -> bool:
+    """Show output in a tkinter dialog with a Copy button."""
+    import tkinter as tk
 
-    Returns True if the user clicked 'Copy to Clipboard'.
-    """
     root = _ensure_root()
     copied = False
 
@@ -65,13 +164,11 @@ def _output_dialog(title: str, result: str) -> bool:
     win.geometry("500x400")
     win.resizable(True, True)
 
-    # Text display
     text_widget = tk.Text(win, wrap=tk.WORD, padx=10, pady=10)
     text_widget.insert("1.0", result)
     text_widget.config(state=tk.DISABLED)
     text_widget.pack(fill=tk.BOTH, expand=True)
 
-    # Button frame
     btn_frame = tk.Frame(win)
     btn_frame.pack(fill=tk.X, padx=10, pady=10)
 
@@ -80,25 +177,61 @@ def _output_dialog(title: str, result: str) -> bool:
         copied = True
         win.destroy()
 
-    def on_close() -> None:
-        win.destroy()
-
     tk.Button(btn_frame, text="Copy to Clipboard", command=on_copy).pack(side=tk.RIGHT, padx=5)
-    tk.Button(btn_frame, text="Close", command=on_close).pack(side=tk.RIGHT, padx=5)
+    tk.Button(btn_frame, text="Close", command=win.destroy).pack(side=tk.RIGHT, padx=5)
 
-    # Make modal
     win.transient(root)
     win.grab_set()
     win.focus_force()
     root.wait_window(win)
-
     return copied
 
 
-def _error_dialog(title: str, message: str) -> None:
-    """Show an error alert dialog."""
+def _tk_error_dialog(title: str, message: str) -> None:
+    """Show a tkinter error dialog."""
+    from tkinter import messagebox
+
     root = _ensure_root()
     messagebox.showerror(title, message, parent=root)
+
+
+def _tk_info_dialog(title: str, message: str) -> None:
+    """Show a tkinter info dialog."""
+    from tkinter import messagebox
+
+    root = _ensure_root()
+    messagebox.showinfo(title, message, parent=root)
+
+
+# ---------------------------------------------------------------------------
+# Platform-dispatched public API
+# ---------------------------------------------------------------------------
+
+def _input_dialog(title: str, message: str, default: str = "") -> str | None:
+    if _IS_MACOS:
+        return _osa_input_dialog(title, message, default)
+    return _tk_input_dialog(title, message, default)
+
+
+def _output_dialog(title: str, result: str) -> bool:
+    if _IS_MACOS:
+        return _osa_output_dialog(title, result)
+    return _tk_output_dialog(title, result)
+
+
+def _error_dialog(title: str, message: str) -> None:
+    if _IS_MACOS:
+        _osa_error_dialog(title, message)
+    else:
+        _tk_error_dialog(title, message)
+
+
+def info_dialog(title: str, message: str) -> None:
+    """Show an informational dialog (used by app.py)."""
+    if _IS_MACOS:
+        _osa_info_dialog(title, message)
+    else:
+        _tk_info_dialog(title, message)
 
 
 def _clean_for_copy(result: str) -> str:
@@ -136,22 +269,10 @@ def show_multi_input_dialog(
     tool: DevTool,
     fields: list[tuple[str, str]],
 ) -> list[str] | None:
-    """Show sequential input dialogs for tools needing multiple inputs.
-
-    Args:
-        tool: The tool instance.
-        fields: List of (label, default_value) tuples.
-
-    Returns:
-        List of input values, or None if cancelled.
-    """
+    """Show sequential input dialogs for tools needing multiple inputs."""
     values: list[str] = []
     for label, default in fields:
-        text = _input_dialog(
-            title=tool.name,
-            message=label,
-            default=default,
-        )
+        text = _input_dialog(title=tool.name, message=label, default=default)
         if text is None:
             return None
         values.append(text)

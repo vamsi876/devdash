@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import sys
 import threading
-import tkinter as tk
-from tkinter import messagebox
 from typing import Any
 
 import pystray
@@ -16,7 +14,7 @@ from gadgetbox.config import load_config
 from gadgetbox.plugin_loader import discover_tools
 from gadgetbox.tools.base import DevTool
 from gadgetbox.ui.notifications import notify
-from gadgetbox.ui.windows import show_tool_dialog
+from gadgetbox.ui.windows import info_dialog, show_tool_dialog
 
 _IS_MACOS = sys.platform == "darwin"
 
@@ -42,16 +40,6 @@ def _create_icon_image() -> Image.Image:
     draw.ellipse([4, 4, size - 4, size - 4], fill=(70, 130, 180))
     draw.text((size // 2 - 8, size // 2 - 10), "G", fill="white")
     return img
-
-
-def _run_tk_dialog(func: Any) -> None:
-    """Run a tkinter dialog in a temporary root window (macOS) or scheduled on existing root."""
-    root = tk.Tk()
-    root.withdraw()
-    try:
-        func(root)
-    finally:
-        root.destroy()
 
 
 class GadgetBoxApp:
@@ -90,33 +78,29 @@ class GadgetBoxApp:
 
         return pystray.Menu(*items)
 
-    def _show_dialog(self, func: Any) -> None:
-        """Show a tkinter dialog, handling macOS vs other platforms."""
-        if _IS_MACOS:
-            # macOS: pystray owns the main thread; create temporary tk root
-            _run_tk_dialog(func)
-        else:
-            # Windows/Linux: schedule on the persistent tk main thread
-            if self._root:
-                self._root.after(0, lambda: func(self._root))
-
     def _make_tool_callback(self, tool_name: str) -> Any:
         """Create a callback for a specific tool menu item."""
         def callback(icon: Any, item: Any) -> None:
             tool = self._tool_map.get(tool_name)
             if tool:
-                self._show_dialog(lambda root: show_tool_dialog(tool))
+                if _IS_MACOS:
+                    show_tool_dialog(tool)
+                elif self._root:
+                    self._root.after(0, lambda: show_tool_dialog(tool))
         return callback
 
     def _on_auto_detect(self, icon: Any, item: Any) -> None:
         """Read clipboard, detect content type, open matching tool."""
-        self._show_dialog(lambda root: self._auto_detect_impl())
+        if _IS_MACOS:
+            self._auto_detect_impl()
+        elif self._root:
+            self._root.after(0, self._auto_detect_impl)
 
     def _auto_detect_impl(self) -> None:
         """Auto-detect implementation."""
         content = clipboard.read()
         if not content.strip():
-            messagebox.showinfo("GadgetBox", "Clipboard is empty")
+            info_dialog("GadgetBox", "Clipboard is empty")
             return
 
         detected = clipboard.detect_type(content)
@@ -137,29 +121,26 @@ class GadgetBoxApp:
                 if tool.keyword == keyword:
                     show_tool_dialog(tool, input_text=content)
                     return
-        messagebox.showinfo(
-            "GadgetBox", f"Detected: {detected.name}. No matching tool found."
-        )
+        info_dialog("GadgetBox", f"Detected: {detected.name}. No matching tool found.")
 
     def _on_about(self, icon: Any, item: Any) -> None:
         """Show about dialog."""
-        self._show_dialog(
-            lambda root: messagebox.showinfo(
-                f"About {__app_name__}",
-                (
-                    f"{__app_name__} v{__version__}\n\n"
-                    "Cross-platform system tray developer utilities.\n"
-                    "https://github.com/vamsi876/gadgetbox"
-                ),
-            )
+        msg = (
+            f"{__app_name__} v{__version__}\n\n"
+            "Cross-platform system tray developer utilities.\n"
+            "https://github.com/vamsi876/gadgetbox"
         )
+        if _IS_MACOS:
+            info_dialog(f"About {__app_name__}", msg)
+        elif self._root:
+            self._root.after(0, lambda: info_dialog(f"About {__app_name__}", msg))
 
     def _on_quit(self, icon: Any, item: Any) -> None:
         """Quit the app."""
         self._stop_clipboard_watcher()
         if self._icon:
             self._icon.stop()
-        if self._root:
+        if not _IS_MACOS and self._root:
             self._root.after(0, self._root.quit)
 
     def _start_clipboard_watcher(self) -> None:

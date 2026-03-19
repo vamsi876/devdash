@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gadgetbox"
-version = "0.2.1"
+version = "0.2.2"
 description = "Cross-platform system tray developer utilities"
 readme = "README.md"
 license = {text = "MIT"}
