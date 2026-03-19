@@ -3,7 +3,7 @@
 import hashlib
 import hmac
 
-from devdash.tools.base import DevTool
+from gadgetbox.tools.base import DevTool
 
 ALGORITHMS = ["md5", "sha1", "sha256", "sha512", "blake2b"]
 

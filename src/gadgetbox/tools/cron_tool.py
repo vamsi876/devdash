@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from croniter import croniter
 
-from devdash.tools.base import DevTool
+from gadgetbox.tools.base import DevTool
 
 PRESETS: dict[str, str] = {
     "every minute": "* * * * *",

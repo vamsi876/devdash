@@ -2,7 +2,7 @@
 
 import pytest
 
-from devdash.tools.url_tool import UrlTool
+from gadgetbox.tools.url_tool import UrlTool
 
 
 @pytest.fixture

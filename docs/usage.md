@@ -1,18 +1,18 @@
 # Usage Guide
 
-## Launching DevDash
+## Launching GadgetBox
 
 Once installed, start the app:
 
 ```bash
-devdash
+gadgetbox
 ```
 
-A wrench icon (🔧) appears in your macOS menubar. Click it to open the menu.
+A wrench icon (🔧) appears in your system tray. Click it to open the menu.
 
 ## Accessing Tools
 
-From the DevDash menu, tools are organized by category:
+From the GadgetBox menu, tools are organized by category:
 
 - **Formatters** — JSON Formatter
 - **Decoders** — JWT Decoder, Base64, URL Decode
@@ -30,7 +30,7 @@ The "Clipboard: Auto-detect" feature intelligently identifies what's in your cli
 ### How to Use It
 
 1. Copy something to your clipboard (any format)
-2. Click **Clipboard: Auto-detect** in the DevDash menu
+2. Click **Clipboard: Auto-detect** in the GadgetBox menu
 3. The matching tool opens with your content pre-filled
 
 ### Supported Formats
@@ -332,7 +332,7 @@ Output: First day of every month at 00:00
 
 ## Configuration
 
-DevDash stores preferences in `~/.config/devdash/config.yaml`. Create or edit this file to customize behavior.
+GadgetBox stores preferences in `~/.config/gadgetbox/config.yaml` on macOS/Linux, or `%APPDATA%/gadgetbox/config.yaml` on Windows. Create or edit this file to customize behavior.
 
 **Available Options:**
 
@@ -399,19 +399,19 @@ Use auto-detect to quickly chain operations:
 
 ## Keyboard Shortcuts
 
-DevDash respects standard macOS shortcuts:
+GadgetBox respects standard keyboard shortcuts across platforms:
 
-- **Cmd+W** — Close current tool dialog
-- **Cmd+Q** — Quit DevDash
-- **Cmd+C** — Copy result to clipboard
+- **Ctrl+W** / **Cmd+W** — Close current tool dialog
+- **Ctrl+Q** / **Cmd+Q** — Quit GadgetBox
+- **Ctrl+C** / **Cmd+C** — Copy result to clipboard
 
-## Quitting DevDash
+## Quitting GadgetBox
 
 To quit the app:
 
-1. Click the DevDash icon in the menubar
+1. Click the GadgetBox icon in the system tray
 2. Select "Quit"
 
-Or press Cmd+Q in the app.
+Or press the standard quit shortcut (Cmd+Q on macOS, Ctrl+Q on Windows/Linux).
 
-The app won't run in the background. Relaunch with `devdash` when needed.
+The app won't run in the background. Relaunch with `gadgetbox` when needed.

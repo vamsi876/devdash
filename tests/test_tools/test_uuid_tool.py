@@ -4,7 +4,7 @@ import re
 
 import pytest
 
-from devdash.tools.uuid_tool import UuidTool
+from gadgetbox.tools.uuid_tool import UuidTool
 
 UUID_REGEX = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",

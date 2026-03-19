@@ -1,17 +1,18 @@
 """Optional SQLite storage for tool history and favorites.
 
 The database is created lazily on first access and stored at
-~/.config/devdash/history.db with restricted (0o600) permissions.
+~/.config/gadgetbox/history.db with restricted (0o600) permissions.
 All public methods are thread-safe — each call opens its own
 connection so there is no shared state between threads.
 """
 
 import os
+import platform
 import sqlite3
 import threading
 from pathlib import Path
 
-from devdash.config import CONFIG_DIR
+from gadgetbox.config import CONFIG_DIR
 
 DB_PATH: Path = CONFIG_DIR / "history.db"
 _PREVIEW_MAX = 200
@@ -75,7 +76,8 @@ def _ensure_db() -> None:
         finally:
             con.close()
 
-        os.chmod(DB_PATH, 0o600)
+        if platform.system() != "Windows":
+            os.chmod(DB_PATH, 0o600)
         _initialized = True
 
 
@@ -91,7 +93,7 @@ def _connect() -> sqlite3.Connection:
 
 
 class HistoryStore:
-    """High-level interface to the DevDash history / favorites database.
+    """High-level interface to the GadgetBox history / favorites database.
 
     Supports use as a context manager::
 

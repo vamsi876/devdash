@@ -1,6 +1,6 @@
 """Lorem ipsum generator."""
 
-from devdash.tools.base import DevTool
+from gadgetbox.tools.base import DevTool
 
 _LOREM_TEXT = (
     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor "

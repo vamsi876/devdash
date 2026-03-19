@@ -1,10 +1,10 @@
 # Adding a New Tool
 
-DevDash uses a plugin system that makes adding new tools straightforward. This guide walks you through creating a tool from scratch.
+GadgetBox uses a plugin system that makes adding new tools straightforward. This guide walks you through creating a tool from scratch.
 
 ## Overview
 
-Each tool is a Python module in `src/devdash/tools/` that:
+Each tool is a Python module in `src/gadgetbox/tools/` that:
 1. Extends `DevTool` base class
 2. Implements required properties and methods
 3. Exports a `register()` function
@@ -13,7 +13,7 @@ The plugin loader automatically discovers and loads all tools.
 
 ## Step 1: Create the Tool File
 
-Create a new file in `src/devdash/tools/` named after your tool, like `src/devdash/tools/my_tool.py`.
+Create a new file in `src/gadgetbox/tools/` named after your tool, like `src/gadgetbox/tools/my_tool.py`.
 
 ## Step 2: Extend DevTool
 
@@ -22,7 +22,7 @@ Import the base class and create your tool:
 ```python
 """My Tool - A super useful developer tool."""
 
-from devdash.tools.base import DevTool
+from gadgetbox.tools.base import DevTool
 
 
 class MyTool(DevTool):
@@ -199,7 +199,7 @@ Here's a minimal working tool:
 ```python
 """Text Reverser - Reverse input text."""
 
-from devdash.tools.base import DevTool
+from gadgetbox.tools.base import DevTool
 
 
 class TextReverserTool(DevTool):
@@ -255,7 +255,7 @@ Create `tests/test_tools/test_mytool.py`:
 """Tests for MyTool."""
 
 import pytest
-from devdash.tools.my_tool import MyTool
+from gadgetbox.tools.my_tool import MyTool
 
 
 @pytest.fixture
@@ -309,7 +309,7 @@ pytest tests/test_tools/test_mytool.py -v
 The plugin loader should automatically find your tool. Test it:
 
 ```bash
-python3 -c "from devdash.plugin_loader import discover_tools; print([t.name for t in discover_tools()])"
+python3 -c "from gadgetbox.plugin_loader import discover_tools; print([t.name for t in discover_tools()])"
 ```
 
 Your tool's name should appear in the list.
@@ -348,10 +348,10 @@ def _validate(self, text: str) -> str:
 
 ### Using Configuration
 
-Access user config via `devdash.config`:
+Access user config via `gadgetbox.config`:
 
 ```python
-from devdash.config import load_config
+from gadgetbox.config import load_config
 
 def process(self, input_text: str, **kwargs: object) -> str:
     config = load_config()
@@ -375,7 +375,7 @@ def process(self, input_text: str, **kwargs: object) -> str:
 
 ## Type Hints
 
-DevDash uses strict type checking. Always annotate parameters and returns:
+GadgetBox uses strict type checking. Always annotate parameters and returns:
 
 ```python
 from typing import Any
@@ -392,25 +392,25 @@ def process(self, input_text, kwargs):
 Run the type checker:
 
 ```bash
-mypy src/devdash/tools/my_tool.py
+mypy src/gadgetbox/tools/my_tool.py
 ```
 
 ## Code Style
 
-DevDash uses [ruff](https://github.com/charliermarsh/ruff) for linting. Format your code:
+GadgetBox uses [ruff](https://github.com/charliermarsh/ruff) for linting. Format your code:
 
 ```bash
-ruff format src/devdash/tools/my_tool.py
-ruff check --fix src/devdash/tools/my_tool.py
+ruff format src/gadgetbox/tools/my_tool.py
+ruff check --fix src/gadgetbox/tools/my_tool.py
 ```
 
 Target line length: 100 characters.
 
 ## Publishing Your Tool
 
-To contribute your tool to DevDash:
+To contribute your tool to GadgetBox:
 
-1. Create a fork: `git clone https://github.com/devdash/devdash.git`
+1. Create a fork: `git clone https://github.com/vamsi876/gadgetbox.git`
 2. Create a branch: `git checkout -b add-mytool`
 3. Write the tool + tests
 4. Submit a pull request
@@ -425,7 +425,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for the full process.
 2. Verify the module name doesn't start with underscore
 3. Check for import errors:
    ```bash
-   python3 -c "from devdash.tools.my_tool import register; register()"
+   python3 -c "from gadgetbox.tools.my_tool import register; register()"
    ```
 
 ### Tests fail
@@ -442,6 +442,6 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for the full process.
 
 ## See Also
 
-- [Architecture Guide](architecture.md) — How DevDash works internally
+- [Architecture Guide](architecture.md) — How GadgetBox works internally
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — Code style and PR process
-- [Existing Tools](../src/devdash/tools/) — Reference implementations
+- [Existing Tools](../src/gadgetbox/tools/) — Reference implementations

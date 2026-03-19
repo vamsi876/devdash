@@ -1,4 +1,4 @@
-# Contributing to DevDash
+# Contributing to GadgetBox
 
 Thanks for your interest in contributing! This guide explains how to report issues, suggest features, and submit code.
 
@@ -19,13 +19,13 @@ Found a bug? Help us squash it.
 
 ### Before Submitting
 
-1. Check [existing issues](https://github.com/devdash/devdash/issues) to avoid duplicates
-2. Check if it's fixed in the latest version: `pip install --upgrade devdash`
+1. Check [existing issues](https://github.com/vamsi876/gadgetbox/issues) to avoid duplicates
+2. Check if it's fixed in the latest version: `pip install --upgrade gadgetbox`
 3. Test with simple input to isolate the problem
 
 ### How to Report
 
-Open a [GitHub issue](https://github.com/devdash/devdash/issues) with:
+Open a [GitHub issue](https://github.com/vamsi876/gadgetbox/issues) with:
 
 **Title:** Clear, one-line description
 ```
@@ -38,7 +38,7 @@ JSON Formatter crashes on large files
 ## Environment
 - macOS version: Sonoma 14.2
 - Python version: 3.12.1
-- DevDash version: 0.1.0
+- GadgetBox version: 0.1.0
 
 ## Steps to Reproduce
 1. Open JSON Formatter
@@ -69,13 +69,13 @@ Have an idea? We'd love to hear it.
 
 ### Before Suggesting
 
-1. Check [existing issues](https://github.com/devdash/devdash/issues) for similar ideas
-2. Make sure it fits DevDash's scope (developer utilities)
+1. Check [existing issues](https://github.com/vamsi876/gadgetbox/issues) for similar ideas
+2. Make sure it fits GadgetBox's scope (developer utilities)
 3. Consider if it should be a separate tool or built into existing one
 
 ### How to Suggest
 
-Open a [GitHub discussion](https://github.com/devdash/devdash/discussions) or [issue](https://github.com/devdash/devdash/issues) with:
+Open a [GitHub discussion](https://github.com/vamsi876/gadgetbox/discussions) or [issue](https://github.com/vamsi876/gadgetbox/issues) with:
 
 **Title:** Feature request or idea
 ```
@@ -86,7 +86,7 @@ Add YAML formatter tool
 
 ```markdown
 ## Use Case
-I frequently work with YAML config files and would love to format and validate them without leaving DevDash.
+I frequently work with YAML config files and would love to format and validate them without leaving GadgetBox.
 
 ## Proposed Solution
 Add a YAML Formatter tool similar to JSON Formatter, with:
@@ -103,7 +103,7 @@ age: 30
 ```
 
 ## Alternative Solutions
-I could use a separate CLI tool, but it would be nicer to stay in DevDash.
+I could use a separate CLI tool, but it would be nicer to stay in GadgetBox.
 
 ## Additional Context
 Popular YAML libraries: pyyaml, ruamel.yaml
@@ -117,9 +117,9 @@ Ready to contribute code? Follow these steps.
 
 ```bash
 # Fork on GitHub (click "Fork")
-git clone https://github.com/YOUR_USERNAME/devdash.git
-cd devdash
-git remote add upstream https://github.com/devdash/devdash.git
+git clone https://github.com/YOUR_USERNAME/gadgetbox.git
+cd gadgetbox
+git remote add upstream https://github.com/vamsi876/gadgetbox.git
 ```
 
 ### 2. Create a Branch
@@ -145,7 +145,7 @@ pip install -e ".[dev]"
 pytest                    # Test your changes
 ruff check src/          # Lint code
 ruff format src/         # Auto-format
-mypy src/devdash/        # Type check
+mypy src/gadgetbox/        # Type check
 ```
 
 ### 4. Add Tests
@@ -168,7 +168,7 @@ pytest tests/ -v
 
 **Test coverage:**
 ```bash
-pytest --cov=src/devdash --cov-report=term-missing
+pytest --cov=src/gadgetbox --cov-report=term-missing
 ```
 
 Aim for >80% coverage on new code.
@@ -178,7 +178,7 @@ Aim for >80% coverage on new code.
 Write clear, concise commit messages:
 
 ```bash
-git add src/devdash/tools/my_tool.py tests/test_tools/test_my_tool.py
+git add src/gadgetbox/tools/my_tool.py tests/test_tools/test_my_tool.py
 
 git commit -m "Add YAML Formatter tool
 
@@ -210,7 +210,7 @@ git rebase upstream/main
 git push origin fix/issue-123-json-crash
 ```
 
-Then open a [pull request on GitHub](https://github.com/devdash/devdash/compare).
+Then open a [pull request on GitHub](https://github.com/vamsi876/gadgetbox/compare).
 
 **PR Title:** Same as commit, clear and descriptive
 ```
@@ -224,7 +224,7 @@ Add YAML Formatter tool
 Adds a new YAML Formatter tool for formatting and validating YAML files.
 
 ## Changes
-- New tool: `src/devdash/tools/yaml_tool.py`
+- New tool: `src/gadgetbox/tools/yaml_tool.py`
 - Supports format, validate, and convert-to-JSON modes
 - Comprehensive test coverage
 
@@ -266,7 +266,7 @@ Once approved, a maintainer will merge your PR. Congratulations!
 
 ## Code Style
 
-DevDash uses strict linting and type checking.
+GadgetBox uses strict linting and type checking.
 
 ### Ruff (Linting and Formatting)
 
@@ -306,7 +306,7 @@ def process(self, input_text, kwargs):
 Run type checker:
 
 ```bash
-mypy src/devdash/
+mypy src/gadgetbox/
 ```
 
 ### Docstrings
@@ -341,7 +341,7 @@ Use pytest fixtures for reusable test setup:
 
 ```python
 import pytest
-from devdash.tools.my_tool import MyTool
+from gadgetbox.tools.my_tool import MyTool
 
 @pytest.fixture
 def tool() -> MyTool:
@@ -361,7 +361,7 @@ Aim for high coverage, especially on:
 - Edge cases (empty input, large input, special chars)
 
 ```bash
-pytest --cov=src/devdash --cov-report=term-missing
+pytest --cov=src/gadgetbox --cov-report=term-missing
 ```
 
 ### Running Tests
@@ -427,18 +427,17 @@ Follow [Keep a Changelog](https://keepachangelog.com/) format:
 
 - Python 3.10+
 - Git
-- macOS (development and testing)
 
 ### Install Dev Environment
 
 ```bash
-git clone https://github.com/devdash/devdash.git
-cd devdash
+git clone https://github.com/vamsi876/gadgetbox.git
+cd gadgetbox
 pip install -e ".[dev]"
 ```
 
 This installs:
-- devdash (editable)
+- gadgetbox (editable)
 - pytest, pytest-cov
 - ruff
 - mypy
@@ -459,8 +458,8 @@ Then on each `git commit`, pre-commit will:
 
 ## Getting Help
 
-- **Issues:** Open a [GitHub issue](https://github.com/devdash/devdash/issues)
-- **Discussions:** Join the [GitHub discussions](https://github.com/devdash/devdash/discussions)
+- **Issues:** Open a [GitHub issue](https://github.com/vamsi876/gadgetbox/issues)
+- **Discussions:** Join the [GitHub discussions](https://github.com/vamsi876/gadgetbox/discussions)
 - **Email:** Contact maintainers (see MAINTAINERS.md)
 
 ## Recognition
@@ -476,4 +475,4 @@ By contributing, you agree that your contributions will be licensed under the [M
 
 ---
 
-Thanks for contributing to DevDash! 🙌
+Thanks for contributing to GadgetBox!

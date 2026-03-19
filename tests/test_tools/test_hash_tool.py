@@ -5,7 +5,7 @@ import hmac
 
 import pytest
 
-from devdash.tools.hash_tool import HashTool
+from gadgetbox.tools.hash_tool import HashTool
 
 
 @pytest.fixture

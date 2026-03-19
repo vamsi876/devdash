@@ -1,11 +1,11 @@
-"""Tests for devdash.plugin_loader - dynamic tool discovery."""
+"""Tests for gadgetbox.plugin_loader - dynamic tool discovery."""
 
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from devdash.plugin_loader import discover_tools
-from devdash.tools.base import DevTool
+from gadgetbox.plugin_loader import discover_tools
+from gadgetbox.tools.base import DevTool
 
 
 class TestDiscoverTools:
@@ -43,12 +43,12 @@ class TestDiscoverTools:
 class TestDiscoverToolsEdgeCases:
     """Test edge cases for the plugin loader."""
 
-    @patch("devdash.plugin_loader.importlib.import_module", side_effect=ImportError("boom"))
+    @patch("gadgetbox.plugin_loader.importlib.import_module", side_effect=ImportError("boom"))
     def test_returns_empty_list_when_package_missing(self, mock_import) -> None:
         result = discover_tools()
         assert result == []
 
-    @patch("devdash.plugin_loader.importlib.import_module")
+    @patch("gadgetbox.plugin_loader.importlib.import_module")
     def test_returns_empty_list_when_no_path(self, mock_import) -> None:
         """If the package has no __path__, we get an empty list."""
         mock_pkg = MagicMock(spec=[])  # no __path__ attribute
@@ -57,8 +57,8 @@ class TestDiscoverToolsEdgeCases:
         result = discover_tools()
         assert result == []
 
-    @patch("devdash.plugin_loader.pkgutil.iter_modules")
-    @patch("devdash.plugin_loader.importlib.import_module")
+    @patch("gadgetbox.plugin_loader.pkgutil.iter_modules")
+    @patch("gadgetbox.plugin_loader.importlib.import_module")
     def test_skips_modules_starting_with_underscore(self, mock_import, mock_iter) -> None:
         """Modules starting with _ or named 'base' should be skipped."""
         mock_pkg = MagicMock()
@@ -72,8 +72,8 @@ class TestDiscoverToolsEdgeCases:
         result = discover_tools()
         assert result == []
 
-    @patch("devdash.plugin_loader.pkgutil.iter_modules")
-    @patch("devdash.plugin_loader.importlib.import_module")
+    @patch("gadgetbox.plugin_loader.pkgutil.iter_modules")
+    @patch("gadgetbox.plugin_loader.importlib.import_module")
     def test_handles_module_with_no_register(self, mock_import, mock_iter) -> None:
         """Modules without a register() function should be silently skipped."""
         mock_pkg = MagicMock()
@@ -83,7 +83,7 @@ class TestDiscoverToolsEdgeCases:
         del no_register_mod.register
 
         def import_side_effect(name: str):
-            if name == "devdash.tools":
+            if name == "gadgetbox.tools":
                 return mock_pkg
             return no_register_mod
 
@@ -93,8 +93,8 @@ class TestDiscoverToolsEdgeCases:
         result = discover_tools()
         assert result == []
 
-    @patch("devdash.plugin_loader.pkgutil.iter_modules")
-    @patch("devdash.plugin_loader.importlib.import_module")
+    @patch("gadgetbox.plugin_loader.pkgutil.iter_modules")
+    @patch("gadgetbox.plugin_loader.importlib.import_module")
     def test_handles_register_raising_exception(self, mock_import, mock_iter) -> None:
         """If register() raises, the tool is skipped and others still load."""
         mock_pkg = MagicMock()
@@ -104,7 +104,7 @@ class TestDiscoverToolsEdgeCases:
         bad_mod.register.side_effect = RuntimeError("broken tool")
 
         def import_side_effect(name: str):
-            if name == "devdash.tools":
+            if name == "gadgetbox.tools":
                 return mock_pkg
             return bad_mod
 

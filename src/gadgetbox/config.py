@@ -2,6 +2,7 @@
 
 import logging
 import os
+import platform
 import threading
 from pathlib import Path
 from typing import Any
@@ -10,9 +11,16 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-# Try ~/.config/devdash first, fall back to ~/Library/Application Support/devdash
-_PRIMARY_DIR = Path.home() / ".config" / "devdash"
-_FALLBACK_DIR = Path.home() / "Library" / "Application Support" / "devdash"
+# Cross-platform config directory candidates
+_PRIMARY_DIR = Path.home() / ".config" / "gadgetbox"
+
+if platform.system() == "Windows":
+    _FALLBACK_DIR = Path(os.environ.get("APPDATA", str(Path.home()))) / "gadgetbox"
+elif platform.system() == "Darwin":
+    _FALLBACK_DIR = Path.home() / "Library" / "Application Support" / "gadgetbox"
+else:
+    # Linux/other: XDG already covered by _PRIMARY_DIR
+    _FALLBACK_DIR = Path.home() / ".local" / "share" / "gadgetbox"
 
 _lock = threading.Lock()
 
@@ -35,7 +43,7 @@ def _resolve_config_dir() -> Path:
         except PermissionError:
             continue
     # Last resort: use home directory directly
-    return Path.home() / ".devdash"
+    return Path.home() / ".gadgetbox"
 
 
 CONFIG_DIR = _resolve_config_dir()
@@ -68,4 +76,5 @@ def save_config(config: dict[str, Any]) -> None:
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     with open(CONFIG_FILE, "w") as f:
         yaml.dump(config, f, default_flow_style=False)
-    os.chmod(CONFIG_FILE, 0o600)
+    if platform.system() != "Windows":
+        os.chmod(CONFIG_FILE, 0o600)

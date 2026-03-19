@@ -2,7 +2,7 @@
 
 import pytest
 
-from devdash.tools.cron_tool import CronTool
+from gadgetbox.tools.cron_tool import CronTool
 
 
 @pytest.fixture

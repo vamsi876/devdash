@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from devdash.tools.jwt_tool import JwtTool
+from gadgetbox.tools.jwt_tool import JwtTool
 
 
 @pytest.fixture

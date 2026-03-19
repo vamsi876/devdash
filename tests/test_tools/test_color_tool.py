@@ -2,7 +2,7 @@
 
 import pytest
 
-from devdash.tools.color_tool import ColorTool
+from gadgetbox.tools.color_tool import ColorTool
 
 
 @pytest.fixture

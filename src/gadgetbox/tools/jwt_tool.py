@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 import jwt
 
-from devdash.tools.base import DevTool
+from gadgetbox.tools.base import DevTool
 
 
 class JwtTool(DevTool):

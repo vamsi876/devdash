@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from devdash.tools.timestamp_tool import TimestampTool
+from gadgetbox.tools.timestamp_tool import TimestampTool
 
 
 @pytest.fixture

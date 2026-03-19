@@ -2,7 +2,7 @@
 
 import pytest
 
-from devdash.tools.password_tool import PasswordTool
+from gadgetbox.tools.password_tool import PasswordTool
 
 
 @pytest.fixture
@@ -131,7 +131,7 @@ class TestSecretsModule:
         """Verify the source file uses the secrets module, not random."""
         import inspect
 
-        import devdash.tools.password_tool as mod
+        import gadgetbox.tools.password_tool as mod
 
         source = inspect.getsource(mod)
         assert "import secrets" in source

@@ -1,14 +1,16 @@
-# DevDash
+# GadgetBox
 
-Open-source macOS menubar developer utilities at your fingertips.
+Cross-platform system tray developer utilities at your fingertips.
 
-[![PyPI](https://img.shields.io/pypi/v/devdash-mac.svg)](https://pypi.org/project/devdash-mac)
+[![PyPI](https://img.shields.io/pypi/v/gadgetbox.svg)](https://pypi.org/project/gadgetbox)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[GIF PLACEHOLDER - menubar app with tools opening in macOS]
+[GIF PLACEHOLDER - system tray app with tools opening across Windows, macOS, and Linux]
 
-## Why DevDash?
+Works on **Windows**, **macOS**, and **Linux**.
+
+## Why GadgetBox?
 
 - **Free & Open Source** — MIT licensed, no ads, no tracking, community-driven
 - **Offline First** — All processing happens locally. Nothing is ever sent to external services
@@ -17,15 +19,15 @@ Open-source macOS menubar developer utilities at your fingertips.
 ## Quick Start
 
 ```bash
-pip install devdash-mac
-devdash
+pip install gadgetbox
+gadgetbox
 ```
 
-Click the wrench icon (🔧) in your macOS menubar to access all tools.
+Click the wrench icon (🔧) in your system tray to access all tools.
 
 ## Tools
 
-DevDash includes 12 essential developer utilities:
+GadgetBox includes 12 essential developer utilities:
 
 | Tool | What it does |
 |------|-------------|
@@ -44,18 +46,18 @@ DevDash includes 12 essential developer utilities:
 
 ## Smart Clipboard
 
-DevDash auto-detects your clipboard content and opens the right tool automatically.
+GadgetBox auto-detects your clipboard content and opens the right tool automatically.
 
 **How it works:**
 1. Copy anything to your clipboard (JSON, UUID, JWT, URL, etc.)
-2. Click "Clipboard: Auto-detect" in the DevDash menu
+2. Click "Clipboard: Auto-detect" in the GadgetBox menu
 3. The matching tool opens with your content pre-filled
 
 Supports auto-detection for: JSON, JWT, UUID, Base64, URL-encoded text, timestamps, hex colors, and cron expressions.
 
 ## Configuration
 
-DevDash stores user preferences in `~/.config/devdash/config.yaml`. Edit this file to customize:
+GadgetBox stores user preferences in `~/.config/gadgetbox/config.yaml` on macOS/Linux, or `%APPDATA%/gadgetbox/config.yaml` on Windows. Edit this file to customize:
 
 ```yaml
 # Default hash algorithm: md5, sha256, sha512
@@ -84,41 +86,40 @@ The config file is created automatically on first run with sensible defaults.
 ### From PyPI (Recommended)
 
 ```bash
-pip install devdash-mac
-devdash
+pip install gadgetbox
+gadgetbox
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/devdash/devdash.git
-cd devdash
+git clone https://github.com/vamsi876/gadgetbox.git
+cd gadgetbox
 pip install -e .
-devdash
+gadgetbox
 ```
 
 For development setup, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## macOS Permissions
+## Permissions (macOS)
 
-DevDash needs clipboard access to work. On first run, macOS will ask for permission:
+GadgetBox needs clipboard access to work. On first run, macOS will ask for permission:
 
-> "DevDash" would like to access your clipboard.
+> "GadgetBox" would like to access your clipboard.
 
 Click **Allow** to enable clipboard auto-detection. You can revoke this later in System Preferences → Security & Privacy → Accessibility.
 
 ## Troubleshooting
 
-**"command not found: devdash"**
+**"command not found: gadgetbox"**
 - Ensure Python 3.10+ is installed: `python3 --version`
-- Reinstall: `pip install --upgrade devdash`
+- Reinstall: `pip install --upgrade gadgetbox`
 
-**Menubar icon doesn't appear**
-- Restart the app: press Ctrl+C to quit, then run `devdash` again
-- Check that you have a menubar (not in fullscreen)
+**System tray icon doesn't appear**
+- Restart the app: press Ctrl+C to quit, then run `gadgetbox` again
 
 **Clipboard detection not working**
-- Grant clipboard permission: System Preferences → Security & Privacy → Accessibility
+- On macOS, grant clipboard permission: System Preferences → Security & Privacy → Accessibility
 - Enable in config: `auto_clipboard_detection: true`
 
 ## Contributing
@@ -133,7 +134,10 @@ Quick links:
 
 ## Built With
 
-- [rumps](https://github.com/jmorey/rumps) — Ridiculously Uncomplicated macOS Python Statusbar applications
+- [pystray](https://github.com/moses-palmer/pystray) — System tray application support
+- [tkinter](https://docs.python.org/3/library/tkinter.html) — Cross-platform GUI toolkit
+- [Pillow](https://python-pillow.org/) — Image processing for tray icons
+- [plyer](https://github.com/kivy/plyer) — Platform-independent Python API for accessing hardware features
 - [pyperclip](https://github.com/asweigart/pyperclip) — Cross-platform clipboard support
 - [PyJWT](https://pyjwt.readthedocs.io/) — JWT encoding and decoding
 - [pyyaml](https://pyyaml.org/) — YAML configuration parsing
@@ -150,6 +154,6 @@ See [LICENSE](LICENSE) for full details.
 
 ## License
 
-MIT License © 2024 DevDash Contributors
+MIT License © 2024-2026 GadgetBox Contributors
 
 See [LICENSE](LICENSE) for details.

@@ -2,7 +2,7 @@
 
 import json
 
-from devdash.tools.base import DevTool
+from gadgetbox.tools.base import DevTool
 
 
 class JsonTool(DevTool):

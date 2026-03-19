@@ -2,7 +2,7 @@
 
 from urllib.parse import parse_qs, quote, unquote, urlparse
 
-from devdash.tools.base import DevTool
+from gadgetbox.tools.base import DevTool
 
 
 class UrlTool(DevTool):

@@ -1,7 +1,7 @@
-"""Tests for devdash.app - macOS menubar application.
+"""Tests for gadgetbox.app - cross-platform system tray application.
 
-These tests mock the rumps module entirely so they can run in CI
-environments that do not have macOS GUI frameworks available.
+These tests mock pystray, PIL, and tkinter so they can run in CI
+environments that do not have GUI frameworks available.
 """
 
 import sys
@@ -12,32 +12,46 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def mock_rumps():
-    """Replace the rumps module with a mock so tests work without macOS GUI.
+def mock_gui_libs():
+    """Replace pystray, PIL, and tkinter with mocks for headless testing."""
+    # Mock pystray
+    fake_pystray = types.ModuleType("pystray")
+    fake_pystray.Icon = MagicMock()  # type: ignore[attr-defined]
+    fake_pystray.MenuItem = MagicMock()  # type: ignore[attr-defined]
+    fake_pystray.Menu = MagicMock()  # type: ignore[attr-defined]
+    fake_pystray.Menu.SEPARATOR = "---"  # type: ignore[attr-defined]
 
-    This fixture injects a fake rumps module into sys.modules before
-    devdash.app is imported, then cleans up afterwards.
-    """
-    fake_rumps = types.ModuleType("rumps")
-    fake_rumps.App = MagicMock  # type: ignore[attr-defined]
-    fake_rumps.MenuItem = MagicMock  # type: ignore[attr-defined]
-    fake_rumps.alert = MagicMock()  # type: ignore[attr-defined]
-    fake_rumps.quit_application = MagicMock()  # type: ignore[attr-defined]
+    # Mock PIL
+    fake_pil = types.ModuleType("PIL")
+    fake_image = types.ModuleType("PIL.Image")
+    fake_image.new = MagicMock(return_value=MagicMock())  # type: ignore[attr-defined]
+    fake_draw_mod = types.ModuleType("PIL.ImageDraw")
+    fake_draw_mod.Draw = MagicMock(return_value=MagicMock())  # type: ignore[attr-defined]
+    fake_pil.Image = fake_image  # type: ignore[attr-defined]
+    fake_pil.ImageDraw = fake_draw_mod  # type: ignore[attr-defined]
 
-    original = sys.modules.get("rumps")
-    sys.modules["rumps"] = fake_rumps
+    originals = {}
+    for mod_name, fake in [
+        ("pystray", fake_pystray),
+        ("PIL", fake_pil),
+        ("PIL.Image", fake_image),
+        ("PIL.ImageDraw", fake_draw_mod),
+    ]:
+        originals[mod_name] = sys.modules.get(mod_name)
+        sys.modules[mod_name] = fake
 
-    # Also ensure devdash.app is reloaded with the mock
-    mods_to_remove = [k for k in sys.modules if k.startswith("devdash.app")]
+    # Clear cached gadgetbox.app so it reimports with mocks
+    mods_to_remove = [k for k in sys.modules if k.startswith("gadgetbox.app")]
     saved = {k: sys.modules.pop(k) for k in mods_to_remove}
 
-    yield fake_rumps
+    yield
 
     # Restore original modules
-    if original is not None:
-        sys.modules["rumps"] = original
-    else:
-        sys.modules.pop("rumps", None)
+    for mod_name, orig in originals.items():
+        if orig is not None:
+            sys.modules[mod_name] = orig
+        else:
+            sys.modules.pop(mod_name, None)
     for k, v in saved.items():
         sys.modules[k] = v
 
@@ -45,17 +59,17 @@ def mock_rumps():
 class TestMainFunction:
     """Verify that the main() entry point exists and is callable."""
 
-    def test_main_is_callable(self, mock_rumps) -> None:
-        from devdash.app import main
+    def test_main_is_callable(self) -> None:
+        from gadgetbox.app import main
 
         assert callable(main)
 
-    @patch("devdash.app.discover_tools", return_value=[])
-    def test_main_creates_app_and_runs(self, mock_discover, mock_rumps) -> None:
-        """main() should instantiate DevDashApp and call run()."""
-        from devdash.app import main
+    @patch("gadgetbox.app.discover_tools", return_value=[])
+    def test_main_creates_app_and_runs(self, mock_discover) -> None:
+        """main() should instantiate GadgetBoxApp and call run()."""
+        from gadgetbox.app import main
 
-        with patch("devdash.app.DevDashApp") as mock_app_cls:
+        with patch("gadgetbox.app.GadgetBoxApp") as mock_app_cls:
             mock_instance = MagicMock()
             mock_app_cls.return_value = mock_instance
             main()
@@ -63,30 +77,30 @@ class TestMainFunction:
             mock_instance.run.assert_called_once()
 
 
-class TestDevDashApp:
-    """Verify the DevDashApp class can be referenced and has expected structure."""
+class TestGadgetBoxApp:
+    """Verify the GadgetBoxApp class has expected structure."""
 
-    def test_class_exists(self, mock_rumps) -> None:
-        from devdash.app import DevDashApp
+    def test_class_exists(self) -> None:
+        from gadgetbox.app import GadgetBoxApp
 
-        assert DevDashApp is not None
+        assert GadgetBoxApp is not None
 
-    def test_class_has_build_menu_method(self, mock_rumps) -> None:
-        from devdash.app import DevDashApp
+    def test_class_has_build_menu_method(self) -> None:
+        from gadgetbox.app import GadgetBoxApp
 
-        assert hasattr(DevDashApp, "_build_menu")
+        assert hasattr(GadgetBoxApp, "_build_menu")
 
-    def test_class_has_on_auto_detect_method(self, mock_rumps) -> None:
-        from devdash.app import DevDashApp
+    def test_class_has_on_auto_detect_method(self) -> None:
+        from gadgetbox.app import GadgetBoxApp
 
-        assert hasattr(DevDashApp, "_on_auto_detect")
+        assert hasattr(GadgetBoxApp, "_on_auto_detect")
 
-    def test_class_has_on_about_method(self, mock_rumps) -> None:
-        from devdash.app import DevDashApp
+    def test_class_has_on_about_method(self) -> None:
+        from gadgetbox.app import GadgetBoxApp
 
-        assert hasattr(DevDashApp, "_on_about")
+        assert hasattr(GadgetBoxApp, "_on_about")
 
-    def test_class_has_on_quit_method(self, mock_rumps) -> None:
-        from devdash.app import DevDashApp
+    def test_class_has_on_quit_method(self) -> None:
+        from gadgetbox.app import GadgetBoxApp
 
-        assert hasattr(DevDashApp, "_on_quit")
+        assert hasattr(GadgetBoxApp, "_on_quit")

@@ -1,14 +1,14 @@
 # Architecture Guide
 
-DevDash is built with simplicity and extensibility in mind. This guide explains the design and how components fit together.
+GadgetBox is built with simplicity and extensibility in mind. This guide explains the design and how components fit together.
 
 ## High-Level Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     DevDash Application                      │
+│                   GadgetBox Application                      │
 ├─────────────────────────────────────────────────────────────┤
-│                        rumps (macOS UI)                      │
+│              pystray + tkinter (Cross-platform UI)           │
 ├─────────────────────────────────────────────────────────────┤
 │                      Plugin System                           │
 │   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
@@ -26,14 +26,14 @@ DevDash is built with simplicity and extensibility in mind. This guide explains 
 The entry point and UI controller:
 
 ```python
-class DevDashApp(rumps.App):
-    """macOS menubar developer utilities app."""
+class GadgetBoxApp:
+    """Cross-platform system tray developer utilities app."""
 ```
 
 Responsibilities:
-- Initialize the rumps App
-- Build the menubar menu from discovered tools
-- Handle menu callbacks
+- Initialize the pystray + tkinter application
+- Build the system tray menu from discovered tools
+- Handle menu callbacks in a separate thread
 - Implement "Clipboard: Auto-detect" logic
 - Show "About" and "Quit" options
 
@@ -52,7 +52,7 @@ def discover_tools() -> list[DevTool]:
 ```
 
 **How it works:**
-1. Imports `devdash.tools` package
+1. Imports `gadgetbox.tools` package
 2. Iterates over all modules in `tools/` directory
 3. Skips modules starting with `_` and the `base.py` module
 4. Calls the `register()` function in each module
@@ -69,7 +69,7 @@ Abstract base class that all tools inherit from:
 
 ```python
 class DevTool(ABC):
-    """Base class for all DevDash tools."""
+    """Base class for all GadgetBox tools."""
 ```
 
 **Required to implement:**
@@ -130,7 +130,9 @@ The `detect_type()` function uses priority-based detection:
 User preferences stored in YAML:
 
 ```python
-CONFIG_FILE = Path.home() / ".config" / "devdash" / "config.yaml"
+CONFIG_FILE = Path.home() / ".config" / "gadgetbox" / "config.yaml"  # macOS/Linux
+# or
+CONFIG_FILE = Path(os.environ["APPDATA"]) / "gadgetbox" / "config.yaml"  # Windows
 ```
 
 **Key Functions:**
@@ -168,7 +170,7 @@ def show_tool_dialog(tool: DevTool, input_text: str = "") -> None:
     """Open a dialog for the given tool."""
 ```
 
-Currently uses rumps native dialogs. Could be extended with custom windows.
+Uses tkinter dialogs for cross-platform input/output. Could be extended with custom windows.
 
 #### notifications.py — Notifications
 
@@ -227,7 +229,9 @@ Tool opens with pre-filled content
 
 ```
 app.py
-  ├── rumps                    (macOS UI framework)
+  ├── pystray                  (System tray icon)
+  ├── Pillow                   (Image processing for icon)
+  ├── tkinter                  (Dialog windows)
   ├── clipboard.py
   ├── plugin_loader.py
   │   └── tools/base.py
@@ -246,38 +250,54 @@ clipboard.py depends on:
 
 config.py depends on:
   └── pyyaml                   (YAML parsing)
+
+notifications.py depends on:
+  └── plyer                    (Cross-platform notifications)
 ```
 
-## Rumps Explanation
+## Cross-Platform Architecture
 
-DevDash uses [rumps](https://github.com/jmorey/rumps) — "Ridiculously Uncomplicated macOS Python Statusbar applications."
+GadgetBox uses a three-layer architecture for cross-platform support:
 
-**Why rumps?**
-- Simple API for macOS menubar apps
-- No need for Cocoa/Objective-C
-- Pure Python with minimal dependencies
-- Handles system integration (accessibility, permissions, etc.)
+1. **pystray** — System tray icon and menu management (Windows, macOS, Linux)
+2. **tkinter** — Dialog windows for tool input/output (built into Python)
+3. **Threading** — pystray menu runs in separate thread, tkinter UI on main thread
 
-**Core Rumps Concepts:**
+**Why this combination?**
+- **pystray** — Only library with true cross-platform system tray support
+- **tkinter** — Built-in Python GUI toolkit, works everywhere
+- **Separate threads** — Keeps menu responsive while tools run
+- **No external C++ dependencies** — Pure Python, easy distribution
+
+**Core Architecture:**
 
 ```python
-class DevDashApp(rumps.App):
+class GadgetBoxApp:
     def __init__(self):
-        # Create app with title (emoji shows in menubar)
-        super().__init__(name="DevDash", title="🔧", quit_button=None)
+        # Create system tray icon
+        self.icon = pystray.Icon("GadgetBox", image, menu=self._build_menu())
 
-    # Menu items
-    self.menu = [
-        rumps.MenuItem("Item 1", callback=self.callback1),
-        None,  # Separator
-        rumps.MenuItem("Item 2", callback=self.callback2),
-    ]
+        # Run in separate thread
+        self.thread = threading.Thread(target=self.icon.run, daemon=True)
+        self.thread.start()
 
-    # Dialogs
-    rumps.alert(title, message)
-    rumps.password_ask(title, message)
-    rumps.save_request(title, message)
+    def _build_menu(self):
+        # Build pystray Menu from discovered tools
+        menu_items = [
+            pystray.MenuItem("JSON Formatter", self._on_tool_click),
+            pystray.MenuItem("Quit", self._on_quit),
+        ]
+        return pystray.Menu(*menu_items)
+
+    def _on_tool_click(self, menu, item):
+        # Show tkinter dialog in main thread
+        self._show_dialog(tool)
 ```
+
+**Threading Model:**
+- **Main thread** — Runs tkinter event loop, shows dialogs
+- **Tray thread** — Daemon thread runs pystray icon and menu
+- **Tool processing** — Happens in main thread (tkinter blocks until done)
 
 ## Extension Points
 
@@ -285,7 +305,7 @@ class DevDashApp(rumps.App):
 
 See [docs/adding-tools.md](adding-tools.md). The plugin system makes this easy:
 
-1. Create `src/devdash/tools/mytool.py`
+1. Create `src/gadgetbox/tools/mytool.py`
 2. Extend `DevTool`
 3. Implement required properties/methods
 4. Export `register()` function
@@ -297,7 +317,7 @@ Modify `ui/windows.py` to change tool dialog appearance, or extend `ui/notificat
 
 ### Changing Config Storage
 
-Currently uses YAML in `~/.config/devdash/config.yaml`. To change:
+Currently uses YAML in `~/.config/gadgetbox/config.yaml`. To change:
 - Edit `config.py` to use different format or location
 - Update `DEFAULT_CONFIG` values
 - Tools read via `load_config()`, so changes are transparent
@@ -308,7 +328,7 @@ Modify `_build_menu()` in `app.py` to add new menu items, separators, or nested 
 
 ## Type Safety
 
-DevDash uses strict type checking:
+GadgetBox uses strict type checking:
 
 - All function parameters have type hints
 - All return types are annotated
@@ -347,7 +367,7 @@ pytest
 Run with coverage:
 
 ```bash
-pytest --cov=src/devdash --cov-report=term-missing
+pytest --cov=src/gadgetbox --cov-report=term-missing
 ```
 
 ## Performance Considerations
@@ -392,12 +412,12 @@ Detection is O(n) where n = clipboard length. Most content is <100KB, detection 
 
 Potential enhancements:
 - Clipboard watcher (optional, currently experimental)
-- Custom UI framework (beyond rumps)
 - Plugin system with external tools
 - Settings GUI instead of YAML editing
 - Keyboard shortcuts for each tool
 - Search/filter tools in menu
 - Tool history/favorites
+- Tray icon themes (light/dark mode)
 
 ## See Also
 

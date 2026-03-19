@@ -2,7 +2,7 @@
 
 import re
 
-from devdash.tools.base import DevTool
+from gadgetbox.tools.base import DevTool
 
 PRESETS: dict[str, str] = {
     "email": r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",

@@ -4,7 +4,7 @@ import base64
 
 import pytest
 
-from devdash.tools.base64_tool import Base64Tool
+from gadgetbox.tools.base64_tool import Base64Tool
 
 
 @pytest.fixture

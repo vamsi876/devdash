@@ -4,7 +4,7 @@ import math
 import secrets
 import string
 
-from devdash.tools.base import DevTool
+from gadgetbox.tools.base import DevTool
 
 # Word list for passphrases (common English words)
 _WORDLIST = [

@@ -1,4 +1,4 @@
-"""Tests for devdash.config - user preferences management."""
+"""Tests for gadgetbox.config - user preferences management."""
 
 from pathlib import Path
 from unittest.mock import patch
@@ -6,14 +6,14 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-import devdash.config as config_mod
-from devdash.config import DEFAULT_CONFIG, load_config, save_config
+import gadgetbox.config as config_mod
+from gadgetbox.config import DEFAULT_CONFIG, load_config, save_config
 
 
 @pytest.fixture()
 def config_in_tmp(tmp_path: Path):
     """Patch CONFIG_DIR and CONFIG_FILE to point at a temporary directory."""
-    cfg_dir = tmp_path / ".config" / "devdash"
+    cfg_dir = tmp_path / ".config" / "gadgetbox"
     cfg_file = cfg_dir / "config.yaml"
     with (
         patch.object(config_mod, "CONFIG_DIR", cfg_dir),

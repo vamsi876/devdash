@@ -2,7 +2,7 @@
 
 import pytest
 
-from devdash.tools.lorem_tool import LoremTool
+from gadgetbox.tools.lorem_tool import LoremTool
 
 
 @pytest.fixture

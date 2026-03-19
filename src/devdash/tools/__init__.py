@@ -1,1 +1,0 @@
-"""DevDash tools registry."""

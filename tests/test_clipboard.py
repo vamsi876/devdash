@@ -1,8 +1,8 @@
-"""Tests for devdash.clipboard - content type detection and clipboard I/O."""
+"""Tests for gadgetbox.clipboard - content type detection and clipboard I/O."""
 
 from unittest.mock import patch
 
-from devdash.clipboard import ContentType, detect_type, read, write
+from gadgetbox.clipboard import ContentType, detect_type, read, write
 
 # ---------------------------------------------------------------------------
 # detect_type: happy-path for every ContentType
@@ -112,23 +112,23 @@ class TestDetectTypePriority:
 class TestClipboardIO:
     """Test read() and write() by mocking pyperclip."""
 
-    @patch("devdash.clipboard.pyperclip.paste", return_value="mock content")
+    @patch("gadgetbox.clipboard.pyperclip.paste", return_value="mock content")
     def test_read_returns_clipboard_content(self, mock_paste) -> None:
         result = read()
         assert result == "mock content"
         mock_paste.assert_called_once()
 
-    @patch("devdash.clipboard.pyperclip.copy")
+    @patch("gadgetbox.clipboard.pyperclip.copy")
     def test_write_sends_text_to_clipboard(self, mock_copy) -> None:
         write("output text")
         mock_copy.assert_called_once_with("output text")
 
-    @patch("devdash.clipboard.pyperclip.paste", return_value="")
+    @patch("gadgetbox.clipboard.pyperclip.paste", return_value="")
     def test_read_empty_clipboard(self, mock_paste) -> None:
         result = read()
         assert result == ""
 
-    @patch("devdash.clipboard.pyperclip.copy")
+    @patch("gadgetbox.clipboard.pyperclip.copy")
     def test_write_empty_string(self, mock_copy) -> None:
         write("")
         mock_copy.assert_called_once_with("")

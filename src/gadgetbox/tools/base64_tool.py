@@ -3,7 +3,7 @@
 import base64
 import re
 
-from devdash.tools.base import DevTool
+from gadgetbox.tools.base import DevTool
 
 _BASE64_RE = re.compile(r"^[A-Za-z0-9+/\n\r]+=*$")
 _BASE64_URLSAFE_RE = re.compile(r"^[A-Za-z0-9_\-\n\r]+=*$")

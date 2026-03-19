@@ -3,7 +3,7 @@
 import re
 from datetime import datetime, timezone
 
-from devdash.tools.base import DevTool
+from gadgetbox.tools.base import DevTool
 
 
 def _relative_time(dt: datetime) -> str:

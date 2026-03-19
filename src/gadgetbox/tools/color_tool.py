@@ -3,7 +3,7 @@
 import colorsys
 import re
 
-from devdash.tools.base import DevTool
+from gadgetbox.tools.base import DevTool
 
 _HEX_RE = re.compile(r"^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$")
 _RGB_RE = re.compile(r"^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$", re.IGNORECASE)

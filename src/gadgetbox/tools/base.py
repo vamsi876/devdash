@@ -1,10 +1,10 @@
-"""Abstract base class for all DevDash tools."""
+"""Abstract base class for all GadgetBox tools."""
 
 from abc import ABC, abstractmethod
 
 
 class DevTool(ABC):
-    """Base class for all DevDash tools."""
+    """Base class for all GadgetBox tools."""
 
     @property
     @abstractmethod

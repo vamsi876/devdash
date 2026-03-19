@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from devdash.tools.json_tool import JsonTool
+from gadgetbox.tools.json_tool import JsonTool
 
 
 @pytest.fixture

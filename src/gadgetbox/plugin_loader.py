@@ -6,7 +6,7 @@ import pkgutil
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from devdash.tools.base import DevTool
+    from gadgetbox.tools.base import DevTool
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def discover_tools() -> list["DevTool"]:
     """Scan the tools/ directory and return registered tool instances."""
     tools: list[DevTool] = []
-    package_name = "devdash.tools"
+    package_name = "gadgetbox.tools"
 
     try:
         package = importlib.import_module(package_name)

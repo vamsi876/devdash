@@ -2,7 +2,7 @@
 
 import pytest
 
-from devdash.tools.regex_tool import RegexTool
+from gadgetbox.tools.regex_tool import RegexTool
 
 
 @pytest.fixture
