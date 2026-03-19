@@ -42,6 +42,11 @@ def _create_icon_image() -> Image.Image:
     return img
 
 
+def _defer(func: Any) -> None:
+    """Run func in a background thread (so AppKit menu can dismiss first)."""
+    threading.Thread(target=func, daemon=True).start()
+
+
 class GadgetBoxApp:
     """Cross-platform system tray developer utilities app."""
 
@@ -50,7 +55,7 @@ class GadgetBoxApp:
         self._tool_map: dict[str, DevTool] = {}
         self._last_clipboard: str = ""
         self._icon: pystray.Icon | None = None
-        self._root: tk.Tk | None = None
+        self._root: Any = None  # tk.Tk on Windows/Linux, None on macOS
         self._clipboard_timer: threading.Timer | None = None
 
         config = load_config()
@@ -84,7 +89,8 @@ class GadgetBoxApp:
             tool = self._tool_map.get(tool_name)
             if tool:
                 if _IS_MACOS:
-                    show_tool_dialog(tool)
+                    # Defer to background thread so menu dismisses first
+                    _defer(lambda: show_tool_dialog(tool))
                 elif self._root:
                     self._root.after(0, lambda: show_tool_dialog(tool))
         return callback
@@ -92,7 +98,7 @@ class GadgetBoxApp:
     def _on_auto_detect(self, icon: Any, item: Any) -> None:
         """Read clipboard, detect content type, open matching tool."""
         if _IS_MACOS:
-            self._auto_detect_impl()
+            _defer(self._auto_detect_impl)
         elif self._root:
             self._root.after(0, self._auto_detect_impl)
 
@@ -131,7 +137,7 @@ class GadgetBoxApp:
             "https://github.com/vamsi876/gadgetbox"
         )
         if _IS_MACOS:
-            info_dialog(f"About {__app_name__}", msg)
+            _defer(lambda: info_dialog(f"About {__app_name__}", msg))
         elif self._root:
             self._root.after(0, lambda: info_dialog(f"About {__app_name__}", msg))
 
@@ -188,11 +194,13 @@ class GadgetBoxApp:
 
         if _IS_MACOS:
             # macOS: pystray (AppKit) must own the main thread.
-            # tkinter dialogs are created on-demand in callbacks.
+            # Dialogs use osascript, deferred to background threads.
             self._icon.run()
         else:
             # Windows/Linux: tkinter mainloop on main thread,
             # pystray in a daemon thread.
+            import tkinter as tk
+
             self._root = tk.Tk()
             self._root.withdraw()
             tray_thread = threading.Thread(target=self._icon.run, daemon=True)
