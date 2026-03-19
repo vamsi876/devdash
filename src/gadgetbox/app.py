@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 import threading
 import tkinter as tk
 from tkinter import messagebox
@@ -16,6 +17,8 @@ from gadgetbox.plugin_loader import discover_tools
 from gadgetbox.tools.base import DevTool
 from gadgetbox.ui.notifications import notify
 from gadgetbox.ui.windows import show_tool_dialog
+
+_IS_MACOS = sys.platform == "darwin"
 
 # Content type display names for notifications
 _TYPE_NAMES: dict[clipboard.ContentType, str] = {
@@ -36,10 +39,19 @@ def _create_icon_image() -> Image.Image:
     size = 64
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    # Draw a wrench-like shape: filled circle with a gear-tooth border
     draw.ellipse([4, 4, size - 4, size - 4], fill=(70, 130, 180))
     draw.text((size // 2 - 8, size // 2 - 10), "G", fill="white")
     return img
+
+
+def _run_tk_dialog(func: Any) -> None:
+    """Run a tkinter dialog in a temporary root window (macOS) or scheduled on existing root."""
+    root = tk.Tk()
+    root.withdraw()
+    try:
+        func(root)
+    finally:
+        root.destroy()
 
 
 class GadgetBoxApp:
@@ -78,22 +90,30 @@ class GadgetBoxApp:
 
         return pystray.Menu(*items)
 
+    def _show_dialog(self, func: Any) -> None:
+        """Show a tkinter dialog, handling macOS vs other platforms."""
+        if _IS_MACOS:
+            # macOS: pystray owns the main thread; create temporary tk root
+            _run_tk_dialog(func)
+        else:
+            # Windows/Linux: schedule on the persistent tk main thread
+            if self._root:
+                self._root.after(0, lambda: func(self._root))
+
     def _make_tool_callback(self, tool_name: str) -> Any:
         """Create a callback for a specific tool menu item."""
         def callback(icon: Any, item: Any) -> None:
             tool = self._tool_map.get(tool_name)
-            if tool and self._root:
-                self._root.after(0, lambda: show_tool_dialog(tool))
+            if tool:
+                self._show_dialog(lambda root: show_tool_dialog(tool))
         return callback
 
     def _on_auto_detect(self, icon: Any, item: Any) -> None:
         """Read clipboard, detect content type, open matching tool."""
-        if not self._root:
-            return
-        self._root.after(0, self._auto_detect_impl)
+        self._show_dialog(lambda root: self._auto_detect_impl())
 
     def _auto_detect_impl(self) -> None:
-        """Auto-detect implementation (runs on main thread)."""
+        """Auto-detect implementation."""
         content = clipboard.read()
         if not content.strip():
             messagebox.showinfo("GadgetBox", "Clipboard is empty")
@@ -123,18 +143,16 @@ class GadgetBoxApp:
 
     def _on_about(self, icon: Any, item: Any) -> None:
         """Show about dialog."""
-        if self._root:
-            self._root.after(
-                0,
-                lambda: messagebox.showinfo(
-                    f"About {__app_name__}",
-                    (
-                        f"{__app_name__} v{__version__}\n\n"
-                        "Cross-platform system tray developer utilities.\n"
-                        "https://github.com/vamsi876/gadgetbox"
-                    ),
+        self._show_dialog(
+            lambda root: messagebox.showinfo(
+                f"About {__app_name__}",
+                (
+                    f"{__app_name__} v{__version__}\n\n"
+                    "Cross-platform system tray developer utilities.\n"
+                    "https://github.com/vamsi876/gadgetbox"
                 ),
             )
+        )
 
     def _on_quit(self, icon: Any, item: Any) -> None:
         """Quit the app."""
@@ -160,7 +178,6 @@ class GadgetBoxApp:
                         )
             except Exception:
                 pass
-            # Reschedule
             self._clipboard_timer = threading.Timer(2.0, poll)
             self._clipboard_timer.daemon = True
             self._clipboard_timer.start()
@@ -177,11 +194,6 @@ class GadgetBoxApp:
 
     def run(self) -> None:
         """Start the application."""
-        # Create hidden tkinter root for dialogs (must be on main thread)
-        self._root = tk.Tk()
-        self._root.withdraw()
-
-        # Create and start the system tray icon in a daemon thread
         menu = self._build_menu()
         self._icon = pystray.Icon(
             name="gadgetbox",
@@ -193,12 +205,18 @@ class GadgetBoxApp:
         if self._clipboard_watcher_enabled:
             self._start_clipboard_watcher()
 
-        # Run pystray in a daemon thread
-        tray_thread = threading.Thread(target=self._icon.run, daemon=True)
-        tray_thread.start()
-
-        # Run tkinter mainloop on the main thread
-        self._root.mainloop()
+        if _IS_MACOS:
+            # macOS: pystray (AppKit) must own the main thread.
+            # tkinter dialogs are created on-demand in callbacks.
+            self._icon.run()
+        else:
+            # Windows/Linux: tkinter mainloop on main thread,
+            # pystray in a daemon thread.
+            self._root = tk.Tk()
+            self._root.withdraw()
+            tray_thread = threading.Thread(target=self._icon.run, daemon=True)
+            tray_thread.start()
+            self._root.mainloop()
 
 
 def main() -> None:
